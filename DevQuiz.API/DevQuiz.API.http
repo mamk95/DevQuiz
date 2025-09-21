@@ -1,0 +1,95 @@
+@DevQuiz.API_HostAddress = https://localhost:7271
+@contentType = application/json
+
+### Start Session - New participant
+POST {{DevQuiz.API_HostAddress}}/api/session/start
+Content-Type: {{contentType}}
+
+{
+  "name": "John Doe",
+  "phone": "+4712345678"
+}
+
+### Start Session - Duplicate phone (should fail)
+POST {{DevQuiz.API_HostAddress}}/api/session/start
+Content-Type: {{contentType}}
+
+{
+  "name": "Jane Doe",
+  "phone": "+4712345678"
+}
+
+### Start Session - Invalid phone format (should fail)
+POST {{DevQuiz.API_HostAddress}}/api/session/start
+Content-Type: {{contentType}}
+
+{
+  "name": "Test User",
+  "phone": "+471234567"
+}
+
+### Get Current Question
+# Note: Requires QuizSession cookie from /api/session/start
+GET {{DevQuiz.API_HostAddress}}/api/quiz/current
+
+### Submit Answer - Correct answer for question 1
+# Note: Requires QuizSession cookie
+POST {{DevQuiz.API_HostAddress}}/api/quiz/answer
+Content-Type: {{contentType}}
+
+{
+  "answerText": "Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion"
+}
+
+### Submit Answer - Wrong answer (adds penalty)
+# Note: Requires QuizSession cookie
+POST {{DevQuiz.API_HostAddress}}/api/quiz/answer
+Content-Type: {{contentType}}
+
+{
+  "answerText": "Wrong answer"
+}
+
+### Submit Answer - Correct answer for question 2 (code-fix)
+# Note: Requires QuizSession cookie
+POST {{DevQuiz.API_HostAddress}}/api/quiz/answer
+Content-Type: {{contentType}}
+
+{
+  "answerText": "+"
+}
+
+### Submit Answer - Correct answer for question 3
+# Note: Requires QuizSession cookie
+POST {{DevQuiz.API_HostAddress}}/api/quiz/answer
+Content-Type: {{contentType}}
+
+{
+  "answerText": "404"
+}
+
+### Submit Answer - Correct answer for question 4
+# Note: Requires QuizSession cookie
+POST {{DevQuiz.API_HostAddress}}/api/quiz/answer
+Content-Type: {{contentType}}
+
+{
+  "answerText": "O(log n)"
+}
+
+### Submit Answer - Correct answer for question 5 (code-fix)
+# Note: Requires QuizSession cookie
+POST {{DevQuiz.API_HostAddress}}/api/quiz/answer
+Content-Type: {{contentType}}
+
+{
+  "answerText": "2"
+}
+
+### Get Leaderboard - Top 10
+GET {{DevQuiz.API_HostAddress}}/api/leaderboard/top
+
+### Get Leaderboard - Top 5
+GET {{DevQuiz.API_HostAddress}}/api/leaderboard/top?limit=5
+
+###

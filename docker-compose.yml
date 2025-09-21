@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  devquiz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:-Server=host.docker.internal;Database=DevQuiz;User Id=sa;Password=YourStrong@Password;TrustServerCertificate=true}
+    restart: unless-stopped
