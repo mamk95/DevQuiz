@@ -60,6 +60,13 @@ import QRCode from 'qrcode'
 const leaderboardStore = useLeaderboardStore()
 const qrCanvas = ref<HTMLCanvasElement>()
 
+const loading = ref(true)
+const leaderboard = ref<LeaderboardEntry[]>([])
+const quizUrl = window.location.origin
+const isInitialLoad = ref(true)
+
+let pollInterval: ReturnType<typeof setInterval>
+
 onMounted(() => {
   generateQRCode()
   loadLeaderboard()
@@ -69,13 +76,6 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(pollInterval)
 })
-
-const loading = ref(true)
-const leaderboard = ref<LeaderboardEntry[]>([])
-const quizUrl = window.location.origin
-const isInitialLoad = ref(true)
-
-let pollInterval: ReturnType<typeof setInterval>
 
 const formatTime = (ms: number) => {
   const seconds = ms / 1000
@@ -102,8 +102,8 @@ const loadLeaderboard = async () => {
   try {
     const newData = await leaderboardStore.fetchLeaderboard()
     leaderboard.value = newData
-  } catch (error) {
-    console.error('Failed to load leaderboard:', error)
+  } catch {
+    // Failed to load leaderboard
   } finally {
     if (isInitialLoad.value) {
       loading.value = false
@@ -123,8 +123,8 @@ const generateQRCode = async () => {
           light: '#ffffff'
         }
       })
-    } catch (error) {
-      console.error('Failed to generate QR code:', error)
+    } catch {
+      // Failed to generate QR code
     }
   }
 }

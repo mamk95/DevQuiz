@@ -8,6 +8,6 @@ public class StartSessionDto
     public required string Name { get; set; }
 
     [Required]
-    [RegularExpression(@"^\+47\d{8}$", ErrorMessage = "Phone must be in format +47XXXXXXXX")]
+    [RegularExpression(@"^\+\d{1,5}\d{4,15}$", ErrorMessage = "Phone must be a valid international number (e.g., +1234567890)")]
     public required string Phone { get; set; }
 }

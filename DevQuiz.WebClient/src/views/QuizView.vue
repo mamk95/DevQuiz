@@ -68,19 +68,6 @@ const router = useRouter()
 const sessionStore = useSessionStore()
 const quizStore = useQuizStore()
 
-onMounted(() => {
-  if (!sessionStore.hasSession) {
-    router.push('/')
-    return
-  }
-  loadCurrentQuestion()
-})
-
-onUnmounted(() => {
-  clearTimeout(penaltyTimeout)
-  clearTimeout(resultTimeout)
-})
-
 const submitting = ref(false)
 const codeAnswer = ref('')
 const penaltyMessage = ref('')
@@ -94,6 +81,19 @@ const currentQuestion = computed(() => quizStore.currentQuestion)
 
 let penaltyTimeout: ReturnType<typeof setTimeout>
 let resultTimeout: ReturnType<typeof setTimeout>
+
+onMounted(() => {
+  if (!sessionStore.hasSession) {
+    router.push('/')
+    return
+  }
+  loadCurrentQuestion()
+})
+
+onUnmounted(() => {
+  clearTimeout(penaltyTimeout)
+  clearTimeout(resultTimeout)
+})
 
 // Initialize code editor with initial code when question loads
 watch(currentQuestion, (newQuestion) => {
@@ -137,8 +137,8 @@ const submitMultipleChoice = async (answer: string) => {
         selectedChoice.value = null
       }, 2000)
     }
-  } catch (error) {
-    console.error('Failed to submit answer:', error)
+  } catch {
+    // Failed to submit answer
   } finally {
     submitting.value = false
   }
@@ -168,8 +168,8 @@ const submitCodeFix = async () => {
         testResult.value = null
       }, 3000)
     }
-  } catch (error) {
-    console.error('Failed to submit answer:', error)
+  } catch {
+    // Failed to submit answer
   } finally {
     submitting.value = false
   }
@@ -190,8 +190,8 @@ const loadCurrentQuestion = async () => {
       sessionStore.setTotalTime(question.totalMs!)
       router.push('/finish')
     }
-  } catch (error) {
-    console.error('Failed to load question:', error)
+  } catch {
+    // Failed to load question, redirect to home
     router.push('/')
   }
 }
