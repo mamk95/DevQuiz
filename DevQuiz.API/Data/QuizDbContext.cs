@@ -54,7 +54,7 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
                 .WithMany(q => q.Progresses)
                 .HasForeignKey(e => e.QuestionId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(e => new { e.SessionId, e.QuestionId });
+            entity.HasIndex(e => new { e.SessionId, e.QuestionId }).IsUnique();
         });
 
         modelBuilder.Entity<Score>(entity =>

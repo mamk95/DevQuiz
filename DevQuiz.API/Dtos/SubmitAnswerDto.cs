@@ -4,6 +4,6 @@ using System.ComponentModel.DataAnnotations;
 public class SubmitAnswerDto
 {
     [Required]
-    [StringLength(256)]
+    [StringLength(512)]
     public required string AnswerText { get; set; }
 }

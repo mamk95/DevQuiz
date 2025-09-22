@@ -17,10 +17,13 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
     [ProducesResponseType(typeof(SessionStartedDto), 400)]
     public async Task<ActionResult<SessionStartedDto>> Start([FromBody] StartSessionDto dto, CancellationToken ct)
     {
-        var name = dto.Name.Trim();
+        var name = dto.Name?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(name))
+            return BadRequest(new SessionStartedDto { Success = false, Message = "Name is required" });
 
         if (!IsValidPhone(dto.Phone))
-            return BadRequest(new SessionStartedDto { Success = false, Message = "Phone must be in format +47XXXXXXXX" });
+            return BadRequest(new SessionStartedDto { Success = false, Message = "Phone must be a valid international number" });
 
         var normalizedPhone = NormalizePhone(dto.Phone);
 
@@ -78,6 +81,6 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         return phone.Trim();
     }
 
-    [GeneratedRegex(@"^\+47\d{8}$")]
+    [GeneratedRegex(@"^\+\d{1,5}\d{4,15}$")]
     private static partial Regex PhoneRegex();
 }

@@ -12,7 +12,8 @@ public class Session
 
     public int CurrentQuestionIndex { get; set; }
 
-    public DateTime? StartedAtUtc { get; set; }
+    [Required]
+    public DateTime StartedAtUtc { get; set; }
 
     public DateTime? CompletedAtUtc { get; set; }
 

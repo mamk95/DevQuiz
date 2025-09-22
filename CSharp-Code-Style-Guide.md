@@ -7,7 +7,19 @@ Scope: code style and formatting, not focusing on third‑party libraries.
 
 - One public type per file; file name matches the type.
 - Program.cs should use top-level statements unless there are special circumstances requiring a class-based approach (e.g., complex initialization, multiple entry points, or specific framework requirements).
-- File‑scoped namespaces; namespace at the top of the file; `using` directives follow the namespace with no blank line between them.
+- File‑scoped namespaces; namespace at the top of the file; `using` directives immediately follow the namespace (no blank line after namespace).
+
+  ```csharp
+  // ✅ CORRECT:
+  namespace MyProject.API.Controllers;
+  using System.Text.Json;
+
+  // ❌ INCORRECT (blank line after namespace):
+  namespace MyProject.API.Controllers;
+
+  using System.Text.Json;
+  ```
+
 - Group code by feature (e.g., `ExampleSlice`, `ExampleFeature`).
 - Regions can be used sparingly to structure long methods (e.g., `#region Data fetching`).
 

@@ -58,8 +58,6 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-app.UseAuthorization();
-
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
