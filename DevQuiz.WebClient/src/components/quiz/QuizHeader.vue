@@ -1,6 +1,3 @@
-import duckColor from '@/assets/duck_color.png';
-import duckContour from '@/assets/duck_contour.png';
-
 <template>
   <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
     <!-- Duck progress row -->
@@ -32,11 +29,12 @@ import duckContour from '@/assets/duck_contour.png';
 </template>
 
 <script setup lang="ts">
+import duckColor from '@/assets/duck_color.png';
+import duckContour from '@/assets/duck_contour.png';
+
 defineProps<{
   currentIndex: number
   totalQuestions: number
   questionType?: 'MultipleChoice' | 'CodeFix'
 }>()
 </script>
-
-<style scoped lang="scss"></style>
