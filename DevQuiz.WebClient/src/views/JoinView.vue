@@ -3,11 +3,18 @@
     <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
       <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
 
-      <form @submit.prevent="handleJoin" class="space-y-6">
+      <!-- Loading state while checking for existing session -->
+      <div v-if="checkingSession" class="text-center py-8">
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
+        ></div>
+        <p class="text-gray-600">Checking for existing session...</p>
+      </div>
+
+      <!-- Join form -->
+      <form v-else @submit.prevent="handleJoin" class="space-y-6">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-            Name
-          </label>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2"> Name </label>
           <input
             id="name"
             v-model="name"
@@ -31,7 +38,11 @@
                 @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white sm:w-auto"
               >
-                <option v-for="country in commonCountryCodes" :key="country.code" :value="country.code">
+                <option
+                  v-for="country in commonCountryCodes"
+                  :key="country.code"
+                  :value="country.code"
+                >
                   {{ country.code }} {{ country.country }}
                 </option>
                 <option value="custom">Other...</option>
@@ -52,7 +63,12 @@
                   title="Back to country list"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
                   </svg>
                 </button>
               </div>
@@ -85,7 +101,10 @@
           {{ loading ? 'Starting...' : 'Start Quiz' }}
         </button>
 
-        <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div
+          v-if="error"
+          class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
           {{ error }}
         </div>
       </form>
@@ -94,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 
@@ -124,24 +143,39 @@ const isCustomCode = ref(false)
 const customCountryCode = ref('')
 const loading = ref(false)
 const error = ref('')
+const checkingSession = ref(true)
+
+// Try to resume existing session on mount
+onMounted(async () => {
+  try {
+    if (!sessionStore.hasSession) return
+    await sessionStore.resumeSession()
+    if (sessionStore.hasSession) {
+      // Session resumed successfully, redirect to quiz
+      router.push('/quiz')
+      return
+    }
+  } catch {
+  } finally {
+    checkingSession.value = false
+  }
+})
 
 // Find if current code is in common list
-const knownCountry = computed(() =>
-  commonCountryCodes.find(c => c.code === countryCode.value)
-)
+const knownCountry = computed(() => commonCountryCodes.find((c) => c.code === countryCode.value))
 
 // For custom codes, use generic validation (4-15 digits is standard international range)
 const phoneValidation = computed(() => {
   if (knownCountry.value) {
     return {
       minLength: knownCountry.value.minLength,
-      maxLength: knownCountry.value.maxLength
+      maxLength: knownCountry.value.maxLength,
     }
   }
   // Generic validation for unknown country codes
   return {
     minLength: 4,
-    maxLength: 15
+    maxLength: 15,
   }
 })
 

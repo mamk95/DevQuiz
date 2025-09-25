@@ -155,6 +155,14 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 if (wasLastQuestion)
                 {
                     var totalMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
+
+                    Response.Cookies.Delete("QuizSession", new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Lax,
+                    });
+
                     return Ok(new AnswerResultDto
                     {
                         Correct = true,
@@ -214,6 +222,14 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
 
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
+
+                // Delete session cookie since quiz is completed
+                Response.Cookies.Delete("QuizSession", new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                });
 
                 return Ok(new AnswerResultDto
                 {
