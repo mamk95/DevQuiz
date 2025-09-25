@@ -59,6 +59,6 @@ export const useSessionStore = defineStore('session', () => {
     startSession,
     setTotalTime,
     incrementQuestionIndex,
-    clearSession
+    clearSession,
   }
 })

@@ -5,9 +5,7 @@
 
       <form @submit.prevent="handleJoin" class="space-y-6">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-            Name
-          </label>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2"> Name </label>
           <input
             id="name"
             v-model="name"
@@ -31,7 +29,11 @@
                 @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white sm:w-auto"
               >
-                <option v-for="country in commonCountryCodes" :key="country.code" :value="country.code">
+                <option
+                  v-for="country in commonCountryCodes"
+                  :key="country.code"
+                  :value="country.code"
+                >
                   {{ country.code }} {{ country.country }}
                 </option>
                 <option value="custom">Other...</option>
@@ -52,7 +54,12 @@
                   title="Back to country list"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
                   </svg>
                 </button>
               </div>
@@ -85,7 +92,10 @@
           {{ loading ? 'Starting...' : 'Start Quiz' }}
         </button>
 
-        <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div
+          v-if="error"
+          class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
           {{ error }}
         </div>
       </form>
@@ -126,22 +136,20 @@ const loading = ref(false)
 const error = ref('')
 
 // Find if current code is in common list
-const knownCountry = computed(() =>
-  commonCountryCodes.find(c => c.code === countryCode.value)
-)
+const knownCountry = computed(() => commonCountryCodes.find((c) => c.code === countryCode.value))
 
 // For custom codes, use generic validation (4-15 digits is standard international range)
 const phoneValidation = computed(() => {
   if (knownCountry.value) {
     return {
       minLength: knownCountry.value.minLength,
-      maxLength: knownCountry.value.maxLength
+      maxLength: knownCountry.value.maxLength,
     }
   }
   // Generic validation for unknown country codes
   return {
     minLength: 4,
-    maxLength: 15
+    maxLength: 15,
   }
 })
 

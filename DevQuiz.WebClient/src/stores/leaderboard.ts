@@ -35,6 +35,6 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     loading,
     error,
     fetchLeaderboard,
-    clearLeaderboard
+    clearLeaderboard,
   }
 })

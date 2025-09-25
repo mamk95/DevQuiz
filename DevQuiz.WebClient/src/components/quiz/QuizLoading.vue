@@ -15,8 +15,8 @@ withDefaults(
     message?: string
   }>(),
   {
-    message: 'Loading question...'
-  }
+    message: 'Loading question...',
+  },
 )
 </script>
 
