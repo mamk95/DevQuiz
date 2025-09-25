@@ -38,3 +38,5 @@ defineProps<{
   questionType?: 'MultipleChoice' | 'CodeFix'
 }>()
 </script>
+
+<style scoped lang="scss"></style>
