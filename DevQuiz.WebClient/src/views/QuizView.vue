@@ -3,6 +3,18 @@
     <QuizLoading v-if="quizStore.loading" />
 
     <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto pt-8">
+      <!-- Timer Display -->
+      <div class="bg-white rounded-lg shadow-md mb-4 p-4">
+        <div class="flex justify-between items-center">
+          <div class="text-sm text-gray-600">
+            Total Time: <span class="font-mono text-lg font-semibold text-blue-600">{{ formattedElapsedTime }}</span>
+          </div>
+          <div v-if="displayPenaltyTime" class="text-sm text-red-500 font-medium">
+            {{ displayPenaltyTime }}
+          </div>
+        </div>
+      </div>
+
       <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <QuizHeader
@@ -77,22 +89,54 @@ const wasCorrect = ref(false)
 const showResult = ref(false)
 const testResult = ref<boolean | null>(null)
 
+// Timer tracking
+const quizStartTime = ref<Date | null>(null)
+const elapsedMs = ref(0)
+// Display-only penalty counter (doesn't affect backend)
+const displayPenaltyCount = ref(0)
+
 const currentQuestion = computed(() => quizStore.currentQuestion)
+
+// Timer calculations
+const formattedElapsedTime = computed(() => {
+  const totalSeconds = Math.floor(elapsedMs.value / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+})
+
+// Display-only penalty time
+const displayPenaltyTime = computed(() => {
+  return displayPenaltyCount.value > 0 ? `+${displayPenaltyCount.value}s penalty` : ''
+})
 
 let penaltyTimeout: ReturnType<typeof setTimeout>
 let resultTimeout: ReturnType<typeof setTimeout>
+let timerInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   if (!sessionStore.hasSession) {
     router.push('/')
     return
   }
+  
+  // Start timer tracking
+  quizStartTime.value = new Date()
+  timerInterval = setInterval(() => {
+    if (quizStartTime.value) {
+      elapsedMs.value = Date.now() - quizStartTime.value.getTime()
+    }
+  }, 1000)
+  
   loadCurrentQuestion()
 })
 
 onUnmounted(() => {
   clearTimeout(penaltyTimeout)
   clearTimeout(resultTimeout)
+  if (timerInterval) {
+    clearInterval(timerInterval)
+  }
 })
 
 // Initialize code editor with initial code when question loads
@@ -129,6 +173,8 @@ const submitMultipleChoice = async (answer: string) => {
       }
       await loadCurrentQuestion()
     } else {
+      // Increment display-only penalty counter
+      displayPenaltyCount.value += 1
       showPenalty()
       showResult.value = true
       clearTimeout(resultTimeout)
@@ -163,6 +209,8 @@ const submitCodeFix = async () => {
       testResult.value = null
       await loadCurrentQuestion()
     } else {
+      // Increment display-only penalty counter
+      displayPenaltyCount.value += 1
       showPenalty()
       setTimeout(() => {
         testResult.value = null
