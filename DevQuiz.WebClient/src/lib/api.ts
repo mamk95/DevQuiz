@@ -31,6 +31,7 @@ interface RawLeaderboardEntry {
 export interface StartSessionRequest {
   name: string
   phone: string
+  avatarUrl: string
 }
 
 export interface StartSessionResponse {
@@ -98,14 +99,14 @@ class ApiClient {
     }
   }
 
-  async startSession(name: string, phone: string): Promise<StartSessionResponse> {
+  async startSession(name: string, phone: string, avatarUrl:string): Promise<StartSessionResponse> {
     const response = await fetch(`${this.baseUrl}/session/start`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name, phone, avatarUrl }),
     })
 
     const data = await this.handleResponse<{ success: boolean; message?: string }>(response)

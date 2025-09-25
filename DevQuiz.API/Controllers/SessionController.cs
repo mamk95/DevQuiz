@@ -44,6 +44,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             Id = Guid.NewGuid(),
             Name = name,
             Phone = normalizedPhone,
+            AvatarUrl = dto.AvatarUrl,
             CreatedAtUtc = DateTime.UtcNow,
         };
 

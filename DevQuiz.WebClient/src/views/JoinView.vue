@@ -4,19 +4,28 @@
       <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
 
       <form @submit.prevent="handleJoin" class="space-y-6">
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-            Name
-          </label>
-          <input
-            id="name"
-            v-model="name"
-            type="text"
-            required
-            maxlength="64"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            placeholder="Enter your name"
-          />
+
+  <div class="flex items-center gap-4 relative" ref="formRowRef">
+          <div class="flex-1 flex flex-col justify-center">
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Name</label>
+            <input
+              id="name"
+              v-model="name"
+              type="text"
+              required
+              maxlength="64"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Enter your name"
+            />
+          </div>
+          <div class="flex flex-col justify-center items-center">
+            <label class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Avatar</label>
+            <AvatarSelector
+              v-model="selectedAvatar"
+              :inputHeight="inputHeight"
+              :containerWidth="containerWidth"
+            />
+          </div>
         </div>
 
         <div>
@@ -94,13 +103,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useSessionStore } from '@/stores/session'
 
 const router = useRouter()
 const sessionStore = useSessionStore()
 
+import { ref, computed, onMounted, nextTick } from 'vue'
+import type { Ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useSessionStore } from '@/stores/session'
+import AvatarSelector from '@/components/AvatarSelector.vue'
 // Common country codes with known validation rules
 const commonCountryCodes = [
   { code: '+47', country: 'Norway', minLength: 8, maxLength: 8 },
@@ -117,6 +128,22 @@ const commonCountryCodes = [
   { code: '+380', country: 'Ukraine', minLength: 9, maxLength: 9 },
 ]
 
+// Avatar selection state
+const selectedAvatar = ref('')
+
+// Lifecycle hooks
+const inputHeight = ref(0)
+const containerWidth = ref(0)
+const formRowRef: Ref<HTMLElement | null> = ref(null)
+onMounted(() => {
+  const inputEl = document.getElementById('name')
+  if (inputEl) inputHeight.value = inputEl.offsetHeight
+  nextTick(() => {
+    if (formRowRef.value) containerWidth.value = formRowRef.value.offsetWidth
+  })
+})
+
+// Reactive state
 const name = ref('')
 const phoneDigits = ref('')
 const countryCode = ref('+47')
@@ -210,7 +237,7 @@ const handleJoin = async () => {
   loading.value = true
 
   try {
-    await sessionStore.startSession(name.value, `${countryCode.value}${phoneDigits.value}`)
+    await sessionStore.startSession(name.value, `${countryCode.value}${phoneDigits.value}`, selectedAvatar.value)
     if (sessionStore.hasSession) {
       router.push('/quiz')
     }
