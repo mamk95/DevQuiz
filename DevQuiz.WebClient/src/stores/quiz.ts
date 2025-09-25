@@ -59,6 +59,6 @@ export const useQuizStore = defineStore('quiz', () => {
     error,
     getCurrentQuestion,
     submitAnswer,
-    clearQuiz,
+    clearQuiz
   }
 })
