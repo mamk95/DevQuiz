@@ -4,6 +4,7 @@
 
     <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto pt-8">
       <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+
         <!-- Header -->
         <QuizHeader
           :current-index="sessionStore.currentQuestionIndex"
