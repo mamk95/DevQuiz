@@ -13,17 +13,19 @@
           <p class="mt-2">Be the first to complete the quiz!</p>
         </div>
 
+        <div v-else-if="leaderboard.length < 3" class="text-center py-12 text-white/70">
+          <Podium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
+        </div>
+
         <div v-else class="space-y-3">
+          <Podium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
           <div
-            v-for="(entry, index) in leaderboard"
+            v-for="(entry, index) in leaderboard.slice(3)"
             :key="index"
             class="flex items-center gap-4 p-4 rounded-lg bg-white/10 backdrop-blur hover:bg-white/20 transition-colors"
           >
-            <div
-              class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
-              :class="getRankClass(index + 1)"
-            >
-              {{ index + 1 }}
+            <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
+              {{ index + 4 }}
             </div>
             <div class="flex-1">
               <p class="font-semibold text-lg">{{ entry.name }}</p>
@@ -35,7 +37,9 @@
         </div>
       </div>
 
-      <div class="w-96 bg-white/10 backdrop-blur rounded-2xl p-8 flex flex-col items-center justify-center">
+      <div
+        class="w-96 bg-white/10 backdrop-blur rounded-2xl p-8 flex flex-col items-center justify-center"
+      >
         <h2 class="text-2xl font-bold mb-6">Join the Quiz!</h2>
 
         <div class="bg-white p-4 rounded-lg mb-6">
@@ -56,6 +60,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useLeaderboardStore } from '@/stores/leaderboard'
 import type { LeaderboardEntry } from '@/lib/api'
 import QRCode from 'qrcode'
+import Podium from '@/components/quiz/LeaderboardPodium.vue'
 
 const leaderboardStore = useLeaderboardStore()
 const qrCanvas = ref<HTMLCanvasElement>()
@@ -80,19 +85,6 @@ onUnmounted(() => {
 const formatTime = (ms: number) => {
   const seconds = ms / 1000
   return `${seconds.toFixed(3)}s`
-}
-
-const getRankClass = (rank: number) => {
-  switch (rank) {
-    case 1:
-      return 'bg-yellow-500 text-yellow-900'
-    case 2:
-      return 'bg-gray-300 text-gray-900'
-    case 3:
-      return 'bg-orange-600 text-orange-100'
-    default:
-      return 'bg-white/20'
-  }
 }
 
 const loadLeaderboard = async () => {
@@ -120,8 +112,8 @@ const generateQRCode = async () => {
         margin: 2,
         color: {
           dark: '#1e3a8a',
-          light: '#ffffff'
-        }
+          light: '#ffffff',
+        },
       })
     } catch {
       // Failed to generate QR code
