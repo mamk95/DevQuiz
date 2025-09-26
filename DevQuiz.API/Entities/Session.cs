@@ -14,6 +14,10 @@ public class Session
 
     [Required]
     public DateTime StartedAtUtc { get; set; }
+    
+    [Required]
+    [StringLength(16)]
+    public required string Difficulty { get; set; }
 
     public DateTime? CompletedAtUtc { get; set; }
 

@@ -98,14 +98,14 @@ class ApiClient {
     }
   }
 
-  async startSession(name: string, phone: string): Promise<StartSessionResponse> {
+  async startSession(name: string, phone: string, difficulty: string): Promise<StartSessionResponse> {
     const response = await fetch(`${this.baseUrl}/session/start`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name, phone, difficulty }),
     })
 
     const data = await this.handleResponse<{ success: boolean; message?: string }>(response)

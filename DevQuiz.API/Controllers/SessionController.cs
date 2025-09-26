@@ -53,6 +53,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             ParticipantId = participant.Id,
             CurrentQuestionIndex = 0,
             StartedAtUtc = DateTime.UtcNow,
+            Difficulty = dto.Difficulty,
         };
 
         db.Participants.Add(participant);
