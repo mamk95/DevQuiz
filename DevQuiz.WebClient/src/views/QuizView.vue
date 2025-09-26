@@ -137,6 +137,7 @@ onUnmounted(() => {
   }
 })
 
+// Initialize code editor with initial code when question loads
 watch(currentQuestion, (newQuestion) => {
   if (newQuestion?.type === 'CodeFix' && newQuestion.initialCode) {
     codeAnswer.value = newQuestion.initialCode
@@ -260,6 +261,7 @@ const loadCurrentQuestion = async () => {
       router.push('/finish')
     }
   } catch {
+    // Failed to load question, redirect to home
     router.push('/')
   }
 }
