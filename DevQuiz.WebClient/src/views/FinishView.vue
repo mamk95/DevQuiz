@@ -35,9 +35,9 @@ const sessionStore = useSessionStore()
 
 const formattedTime = computed(() => {
   const totalMs = sessionStore.totalTimeMs
-  if (!totalMs) return '0.000s'
+  if (!totalMs) return '0.0s'
   const seconds = totalMs / 1000
-  return `${seconds.toFixed(3)}s`
+  return `${seconds.toFixed(1)}s`
 })
 
 const goHome = () => {
