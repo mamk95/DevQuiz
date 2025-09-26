@@ -77,14 +77,32 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
     {
         var sessionId = GetSessionIdFromCookie();
         if (sessionId == null)
+        {
+            // Invalid or missing cookie - delete it to ensure clean state
+            Response.Cookies.Delete("QuizSession", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+            });
             return Unauthorized();
+        }
 
         var session = await db.Sessions
             .Include(s => s.Participant)
             .FirstOrDefaultAsync(s => s.Id == sessionId.Value, ct);
 
         if (session == null || session.Participant == null)
+        {
+            // Session doesn't exist in database - delete the invalid cookie
+            Response.Cookies.Delete("QuizSession", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+            });
             return Unauthorized();
+        }
 
         var totalQuestions = await db.Questions.CountAsync(ct);
         var answeredQuestions = await db.Progresses
