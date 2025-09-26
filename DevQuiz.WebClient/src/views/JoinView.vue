@@ -148,14 +148,13 @@ const checkingSession = ref(true)
 // Try to resume existing session on mount
 onMounted(async () => {
   try {
-    if (!sessionStore.hasSession) return
     await sessionStore.resumeSession()
     if (sessionStore.hasSession) {
-      // Session resumed successfully, redirect to quiz
       router.push('/quiz')
       return
     }
-  } catch {
+  } catch (err) {
+    console.error('Failed to resume session:', err)
   } finally {
     checkingSession.value = false
   }
