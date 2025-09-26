@@ -6,8 +6,25 @@
       <h1 class="text-3xl font-bold mb-4 text-gray-800">Quiz Completed!</h1>
 
       <div class="bg-blue-50 rounded-lg p-6 mb-6">
+        <p class="text-sm text-gray-600 mb-2">Your Current Position</p>
+        <p class="text-4xl font-bold text-blue-600">{{ leaderBoard?.position }}</p>
+      </div>
+
+      <div class="bg-blue-50 rounded-lg p-6 mb-6">
         <p class="text-sm text-gray-600 mb-2">Your Total Time</p>
         <p class="text-4xl font-bold text-blue-600">{{ formattedTime }}</p>
+      </div>
+
+      <div class="bg-blue-50 rounded-lg p-6 mb-6">
+        <p class="text-md font-bold text-gray-600 mb-2">
+          Since you performed so well, we would appreciate if you applied for a position at
+          Capgemini!
+        </p>
+        <a
+          href="https://www.capgemini.com/no-no/careers/join-capgemini/job-search/?country_code=no-no&country_name=Norway&location=Trondheim&size=15"
+          class="text-blue-600 underline"
+          >Apply here</a
+        >
       </div>
 
       <div class="text-gray-700 space-y-2 mb-8">
@@ -26,15 +43,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import { api, type LeaderboardPersonalScore } from '@/lib/api'
 
 const router = useRouter()
+const leaderBoard = ref<LeaderboardPersonalScore | null>(null)
 const sessionStore = useSessionStore()
+onMounted(async () => {
+  try {
+    leaderBoard.value = await api.getMyScore()
+  } catch {}
+})
 
 const formattedTime = computed(() => {
-  const totalMs = sessionStore.totalTimeMs
+  const totalMs = leaderBoard.value?.totalMs
   if (!totalMs) return '0.000s'
   const seconds = totalMs / 1000
   return `${seconds.toFixed(3)}s`

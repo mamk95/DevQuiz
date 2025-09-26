@@ -66,6 +66,22 @@ export interface LeaderboardEntry {
   totalMs: number
 }
 
+export interface LeaderboardPersonalScore {
+  name: string
+  totalMs: number
+  position: number
+  totalParticipants: number
+  completedAt: string
+}
+
+export interface Leader {
+  name: string
+  totalMs: number
+  position: number
+  totalParticipants: number
+  completedAt: string
+}
+
 class ApiClient {
   private baseUrl: string
 
@@ -111,7 +127,7 @@ class ApiClient {
     const data = await this.handleResponse<{ success: boolean; message?: string }>(response)
     return {
       success: data.success ?? false,
-      message: data.message
+      message: data.message,
     }
   }
 
@@ -141,7 +157,7 @@ class ApiClient {
       testCode: data.testCode,
       done: data.done,
       totalMs: data.totalMs,
-      questionIndex: data.questionIndex
+      questionIndex: data.questionIndex,
     }
   }
 
@@ -161,7 +177,7 @@ class ApiClient {
       correct: data.correct ?? false,
       penaltyMsAdded: data.penaltyMsAdded,
       quizCompleted: data.quizCompleted,
-      totalMs: data.totalMs
+      totalMs: data.totalMs,
     }
   }
 
@@ -172,10 +188,24 @@ class ApiClient {
 
     const data = await this.handleResponse<RawLeaderboardEntry[]>(response)
 
-    return data.map(entry => ({
+    return data.map((entry) => ({
       name: entry.name ?? '',
-      totalMs: entry.totalMs ?? 0
+      totalMs: entry.totalMs ?? 0,
     }))
+  }
+
+  async getMyScore(): Promise<LeaderboardPersonalScore | null> {
+    const response = await fetch(`${this.baseUrl}/leaderboard/my-score`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (response.status === 404) {
+      return null
+    }
+
+    const data = await this.handleResponse<LeaderboardPersonalScore>(response)
+    return data
   }
 }
 
