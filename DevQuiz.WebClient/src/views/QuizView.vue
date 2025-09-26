@@ -89,15 +89,12 @@ const wasCorrect = ref(false)
 const showResult = ref(false)
 const testResult = ref<boolean | null>(null)
 
-// Timer tracking
 const sessionStartTime = ref<Date | null>(null)
 const elapsedMs = ref(0)
-// Total penalty from API
 const totalPenaltyMs = ref(0)
 
 const currentQuestion = computed(() => quizStore.currentQuestion)
 
-// Timer calculations
 const formattedElapsedTime = computed(() => {
   const totalSeconds = Math.floor(elapsedMs.value / 1000)
   const minutes = Math.floor(totalSeconds / 60)
@@ -105,7 +102,6 @@ const formattedElapsedTime = computed(() => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 })
 
-// Display total penalty time from API
 const displayPenaltyTime = computed(() => {
   if (totalPenaltyMs.value > 0) {
     const penaltySeconds = Math.floor(totalPenaltyMs.value / 1000)
@@ -124,7 +120,6 @@ onMounted(() => {
     return
   }
   
-  // Timer will be initialized when the current question is loaded
   timerInterval = setInterval(() => {
     if (sessionStartTime.value) {
       elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
@@ -142,7 +137,6 @@ onUnmounted(() => {
   }
 })
 
-// Initialize code editor with initial code when question loads
 watch(currentQuestion, (newQuestion) => {
   if (newQuestion?.type === 'CodeFix' && newQuestion.initialCode) {
     codeAnswer.value = newQuestion.initialCode
@@ -154,7 +148,6 @@ watch(currentQuestion, (newQuestion) => {
   showResult.value = false
   testResult.value = null
   
-  // Set session start time if not already set
   if (newQuestion?.sessionStartedAtUtc && !sessionStartTime.value) {
     sessionStartTime.value = newQuestion.sessionStartedAtUtc
     elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
@@ -175,7 +168,6 @@ const submitMultipleChoice = async (answer: string) => {
     lastAnswer.value = answer
 
     if (result.correct) {
-      // Update total penalty even for correct answers (for consistency)
       if (result.totalPenaltyMs !== undefined) {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
@@ -186,11 +178,9 @@ const submitMultipleChoice = async (answer: string) => {
       }
       await loadCurrentQuestion()
     } else {
-      // Show penalty message and update total penalty from response
       if (result.penaltyMsAdded) {
         showPenalty(result.penaltyMsAdded)
       }
-      // Update total penalty from API response
       if (result.totalPenaltyMs !== undefined) {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
@@ -218,7 +208,6 @@ const submitCodeFix = async () => {
     testResult.value = result.correct
 
     if (result.correct) {
-      // Update total penalty even for correct answers (for consistency)
       if (result.totalPenaltyMs !== undefined) {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
@@ -231,11 +220,9 @@ const submitCodeFix = async () => {
       testResult.value = null
       await loadCurrentQuestion()
     } else {
-      // Show penalty message and update total penalty from response
       if (result.penaltyMsAdded) {
         showPenalty(result.penaltyMsAdded)
       }
-      // Update total penalty from API response
       if (result.totalPenaltyMs !== undefined) {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
@@ -263,10 +250,8 @@ const loadCurrentQuestion = async () => {
   try {
     const question = await quizStore.getCurrentQuestion()
     
-    // Set session start time from API response if available
     if (question?.sessionStartedAtUtc && !sessionStartTime.value) {
       sessionStartTime.value = question.sessionStartedAtUtc
-      // Update elapsed time immediately
       elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
     }
     
@@ -275,7 +260,6 @@ const loadCurrentQuestion = async () => {
       router.push('/finish')
     }
   } catch {
-    // Failed to load question, redirect to home
     router.push('/')
   }
 }
