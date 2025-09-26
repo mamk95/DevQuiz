@@ -5,6 +5,7 @@ import { api } from '@/lib/api'
 export const useSessionStore = defineStore('session', () => {
   const participantName = ref('')
   const phone = ref('')
+  const avatar = ref('')
   const hasSession = ref(false)
   const currentQuestionIndex = ref(0)
   const totalQuestions = ref(5)
@@ -12,13 +13,14 @@ export const useSessionStore = defineStore('session', () => {
 
   const isAuthenticated = computed(() => hasSession.value)
 
-  async function startSession(name: string, phoneNumber: string) {
+  async function startSession(name: string, phoneNumber: string, avatarUrl: string) {
     try {
-      const result = await api.startSession(name, phoneNumber)
+      const result = await api.startSession(name, phoneNumber, avatarUrl)
 
       if (result.success) {
         participantName.value = name
         phone.value = phoneNumber
+        avatar.value = avatarUrl 
         hasSession.value = true
         currentQuestionIndex.value = 0
         totalTimeMs.value = null
