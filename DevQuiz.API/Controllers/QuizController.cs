@@ -42,9 +42,12 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             });
         }
 
-        var currentQuestion = await db.Questions
-            .Where(q => q.Sequence == session.CurrentQuestionIndex + 1)
+        var quizQuestion = await db.QuizQuestions
+            .Include(qq => qq.Question)
+            .Where(qq => qq.Sequence == session.CurrentQuestionIndex + 1)
             .FirstOrDefaultAsync(ct);
+
+        var currentQuestion = quizQuestion?.Question;
 
         if (currentQuestion == null)
         {
@@ -128,9 +131,12 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new AnswerResultDto { Correct = false });
             }
 
-            var currentQuestion = await db.Questions
-                .Where(q => q.Sequence == session.CurrentQuestionIndex + 1)
+            var quizQuestion = await db.QuizQuestions
+                .Include(qq => qq.Question)
+                .Where(qq => qq.Sequence == session.CurrentQuestionIndex + 1)
                 .FirstOrDefaultAsync(ct);
+
+            var currentQuestion = quizQuestion?.Question;
 
             if (currentQuestion == null)
             {
@@ -150,7 +156,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             if (progress.IsCorrect)
             {
                 await transaction.RollbackAsync(ct);
-                var wasLastQuestion = !await db.Questions.AnyAsync(q => q.Sequence == session.CurrentQuestionIndex + 2, ct);
+                var wasLastQuestion = !await db.QuizQuestions.AnyAsync(qq => qq.Sequence == session.CurrentQuestionIndex + 2, ct);
 
                 if (wasLastQuestion)
                 {
@@ -188,8 +194,8 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
 
             session.CurrentQuestionIndex++;
 
-            var nextQuestion = await db.Questions
-                .AnyAsync(q => q.Sequence == session.CurrentQuestionIndex + 1, ct);
+            var nextQuestion = await db.QuizQuestions
+                .AnyAsync(qq => qq.Sequence == session.CurrentQuestionIndex + 1, ct);
 
             if (!nextQuestion)
             {

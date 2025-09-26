@@ -9,6 +9,8 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
     public DbSet<Session> Sessions { get; set; }
 
     public DbSet<Question> Questions { get; set; }
+    public DbSet<Quiz> Quizzes { get; set; }
+    public DbSet<QuizQuestion> QuizQuestions { get; set; }
 
     public DbSet<Progress> Progresses { get; set; }
 
@@ -37,8 +39,13 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
 
         modelBuilder.Entity<Question>(entity =>
         {
-            entity.HasIndex(e => e.Sequence).IsUnique();
             entity.Property(e => e.Type).HasConversion<byte>();
+        });
+
+        modelBuilder.Entity<QuizQuestion>(entity =>
+        {
+            entity.HasIndex(e => new { e.QuizId, e.QuestionId }).IsUnique();
+            entity.Property(e => e.Sequence).IsRequired();
         });
 
         modelBuilder.Entity<Progress>(entity =>

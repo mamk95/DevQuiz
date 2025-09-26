@@ -7,8 +7,6 @@ public class Question
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    public int Sequence { get; set; }
 
     [Required]
     public QuestionType Type { get; set; }
@@ -25,4 +23,6 @@ public class Question
     public string? ChoicesJson { get; set; }
 
     public ICollection<Progress> Progresses { get; set; } = [];
+
+    public ICollection<QuizQuestion>? QuizQuestions { get; set; }
 }
