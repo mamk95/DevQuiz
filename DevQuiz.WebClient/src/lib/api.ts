@@ -14,6 +14,7 @@ interface RawQuestion {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: string
 }
 
 interface RawAnswerResponse {
@@ -48,6 +49,7 @@ export interface Question {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: Date
 }
 
 export interface AnswerRequest {
@@ -70,7 +72,7 @@ class ApiClient {
   private baseUrl: string
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'https://localhost:7271/api'
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5289/api'
   }
 
   private async handleResponse<T>(response: Response): Promise<T> {
@@ -132,6 +134,26 @@ class ApiClient {
       type = 'CodeFix'
     }
 
+    // Parse the UTC date string correctly
+    // If the string doesn't end with 'Z', append it to ensure it's parsed as UTC
+    let sessionStartedAtUtc: Date | undefined
+    if (data.sessionStartedAtUtc) {
+      const dateStr = data.sessionStartedAtUtc.endsWith('Z') 
+        ? data.sessionStartedAtUtc 
+        : data.sessionStartedAtUtc + 'Z'
+      sessionStartedAtUtc = new Date(dateStr)
+    }
+    
+    // Debug logging to check timezone handling
+    if (data.sessionStartedAtUtc) {
+      console.log('Raw sessionStartedAtUtc from API:', data.sessionStartedAtUtc)
+      console.log('Corrected date string:', data.sessionStartedAtUtc.endsWith('Z') ? data.sessionStartedAtUtc : data.sessionStartedAtUtc + 'Z')
+      console.log('Parsed Date object:', sessionStartedAtUtc)
+      console.log('Date.getTime() (UTC milliseconds):', sessionStartedAtUtc?.getTime())
+      console.log('Current Date.now() (UTC milliseconds):', Date.now())
+      console.log('Calculated elapsed ms:', Date.now() - (sessionStartedAtUtc?.getTime() || 0))
+    }
+
     return {
       type,
       prompt: data.prompt,
@@ -141,7 +163,8 @@ class ApiClient {
       testCode: data.testCode,
       done: data.done,
       totalMs: data.totalMs,
-      questionIndex: data.questionIndex
+      questionIndex: data.questionIndex,
+      sessionStartedAtUtc
     }
   }
 

@@ -39,6 +39,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 Done = true,
                 TotalMs = totalMs,
+                SessionStartedAtUtc = session.StartedAtUtc,
             });
         }
 
@@ -53,6 +54,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 Done = true,
                 TotalMs = totalMs,
+                SessionStartedAtUtc = session.StartedAtUtc,
             });
         }
 
@@ -80,6 +82,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             QuestionIndex = session.CurrentQuestionIndex,
             Type = currentQuestion.Type == QuestionType.MultipleChoice ? "MC" : "CodeFix",
             Prompt = currentQuestion.Prompt,
+            SessionStartedAtUtc = session.StartedAtUtc,
         };
 
         if (currentQuestion.Type == QuestionType.MultipleChoice && !string.IsNullOrEmpty(currentQuestion.ChoicesJson))

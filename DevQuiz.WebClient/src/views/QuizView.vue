@@ -90,7 +90,7 @@ const showResult = ref(false)
 const testResult = ref<boolean | null>(null)
 
 // Timer tracking
-const quizStartTime = ref<Date | null>(null)
+const sessionStartTime = ref<Date | null>(null)
 const elapsedMs = ref(0)
 // Display-only penalty counter (doesn't affect backend)
 const displayPenaltyCount = ref(0)
@@ -120,11 +120,11 @@ onMounted(() => {
     return
   }
   
-  // Start timer tracking
-  quizStartTime.value = new Date()
+  // Timer will be initialized when the current question is loaded
   timerInterval = setInterval(() => {
-    if (quizStartTime.value) {
-      elapsedMs.value = Date.now() - quizStartTime.value.getTime()
+    if (sessionStartTime.value) {
+      // Both Date.now() and sessionStartTime.getTime() are in UTC milliseconds
+      elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
     }
   }, 1000)
   
@@ -150,6 +150,12 @@ watch(currentQuestion, (newQuestion) => {
   lastAnswer.value = null
   showResult.value = false
   testResult.value = null
+  
+  // Set session start time if not already set
+  if (newQuestion?.sessionStartedAtUtc && !sessionStartTime.value) {
+    sessionStartTime.value = newQuestion.sessionStartedAtUtc
+    elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
+  }
 })
 
 const submitMultipleChoice = async (answer: string) => {
@@ -234,6 +240,14 @@ const showPenalty = () => {
 const loadCurrentQuestion = async () => {
   try {
     const question = await quizStore.getCurrentQuestion()
+    
+    // Set session start time from API response if available
+    if (question?.sessionStartedAtUtc && !sessionStartTime.value) {
+      sessionStartTime.value = question.sessionStartedAtUtc
+      // Update elapsed time immediately
+      elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
+    }
+    
     if (question?.done) {
       sessionStore.setTotalTime(question.totalMs!)
       router.push('/finish')
