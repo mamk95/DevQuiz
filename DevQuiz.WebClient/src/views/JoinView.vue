@@ -3,29 +3,26 @@
     <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
       <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
 
-      <form @submit.prevent="handleJoin" class="space-y-6">
+      <!-- Avatar selector centered above the form -->
+      <div class="flex justify-center mb-6">
+        <div class="flex flex-col items-center">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Avatar</label>
+          <AvatarSelector v-model="selectedAvatar" :inputHeight="60" :containerWidth="300" />
+        </div>
+      </div>
 
-  <div class="flex items-center gap-4 relative" ref="formRowRef">
-          <div class="flex-1 flex flex-col justify-center">
-            <label for="name" class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Name</label>
-            <input
-              id="name"
-              v-model="name"
-              type="text"
-              required
-              maxlength="64"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              placeholder="Enter your name"
-            />
-          </div>
-          <div class="flex flex-col justify-center items-center">
-            <label class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Avatar</label>
-            <AvatarSelector
-              v-model="selectedAvatar"
-              :inputHeight="inputHeight"
-              :containerWidth="containerWidth"
-            />
-          </div>
+      <form @submit.prevent="handleJoin" class="space-y-6">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          <input
+            id="name"
+            v-model="name"
+            type="text"
+            required
+            maxlength="64"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            placeholder="Enter your name"
+          />
         </div>
 
         <div>
@@ -40,7 +37,11 @@
                 @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white sm:w-auto"
               >
-                <option v-for="country in commonCountryCodes" :key="country.code" :value="country.code">
+                <option
+                  v-for="country in commonCountryCodes"
+                  :key="country.code"
+                  :value="country.code"
+                >
                   {{ country.code }} {{ country.country }}
                 </option>
                 <option value="custom">Other...</option>
@@ -61,7 +62,12 @@
                   title="Back to country list"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
                   </svg>
                 </button>
               </div>
@@ -94,7 +100,10 @@
           {{ loading ? 'Starting...' : 'Start Quiz' }}
         </button>
 
-        <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div
+          v-if="error"
+          class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
           {{ error }}
         </div>
       </form>
@@ -103,7 +112,6 @@
 </template>
 
 <script setup lang="ts">
-
 const router = useRouter()
 const sessionStore = useSessionStore()
 
@@ -153,22 +161,20 @@ const loading = ref(false)
 const error = ref('')
 
 // Find if current code is in common list
-const knownCountry = computed(() =>
-  commonCountryCodes.find(c => c.code === countryCode.value)
-)
+const knownCountry = computed(() => commonCountryCodes.find((c) => c.code === countryCode.value))
 
 // For custom codes, use generic validation (4-15 digits is standard international range)
 const phoneValidation = computed(() => {
   if (knownCountry.value) {
     return {
       minLength: knownCountry.value.minLength,
-      maxLength: knownCountry.value.maxLength
+      maxLength: knownCountry.value.maxLength,
     }
   }
   // Generic validation for unknown country codes
   return {
     minLength: 4,
-    maxLength: 15
+    maxLength: 15,
   }
 })
 
@@ -237,7 +243,11 @@ const handleJoin = async () => {
   loading.value = true
 
   try {
-    await sessionStore.startSession(name.value, `${countryCode.value}${phoneDigits.value}`, selectedAvatar.value)
+    await sessionStore.startSession(
+      name.value,
+      `${countryCode.value}${phoneDigits.value}`,
+      selectedAvatar.value,
+    )
     if (sessionStore.hasSession) {
       router.push('/quiz')
     }
