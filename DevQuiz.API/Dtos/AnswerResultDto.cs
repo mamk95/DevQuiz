@@ -9,4 +9,6 @@ public class AnswerResultDto
     public bool? QuizCompleted { get; set; }
 
     public int? TotalMs { get; set; }
+
+    public int? TotalPenaltyMs { get; set; }
 }

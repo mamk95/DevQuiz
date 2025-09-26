@@ -22,6 +22,7 @@ interface RawAnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 interface RawLeaderboardEntry {
@@ -61,6 +62,7 @@ export interface AnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 export interface LeaderboardEntry {
@@ -134,26 +136,10 @@ class ApiClient {
       type = 'CodeFix'
     }
 
-    // Parse the UTC date string correctly
-    // If the string doesn't end with 'Z', append it to ensure it's parsed as UTC
-    let sessionStartedAtUtc: Date | undefined
-    if (data.sessionStartedAtUtc) {
-      const dateStr = data.sessionStartedAtUtc.endsWith('Z') 
-        ? data.sessionStartedAtUtc 
-        : data.sessionStartedAtUtc + 'Z'
-      sessionStartedAtUtc = new Date(dateStr)
-    }
-    
-    // Debug logging to check timezone handling
-    if (data.sessionStartedAtUtc) {
-      console.log('Raw sessionStartedAtUtc from API:', data.sessionStartedAtUtc)
-      console.log('Corrected date string:', data.sessionStartedAtUtc.endsWith('Z') ? data.sessionStartedAtUtc : data.sessionStartedAtUtc + 'Z')
-      console.log('Parsed Date object:', sessionStartedAtUtc)
-      console.log('Date.getTime() (UTC milliseconds):', sessionStartedAtUtc?.getTime())
-      console.log('Current Date.now() (UTC milliseconds):', Date.now())
-      console.log('Calculated elapsed ms:', Date.now() - (sessionStartedAtUtc?.getTime() || 0))
-    }
-
+    // Parse the UTC date string correctly - ensure it's treated as UTC
+    const sessionStartedAtUtc = data.sessionStartedAtUtc 
+      ? new Date(data.sessionStartedAtUtc.endsWith('Z') ? data.sessionStartedAtUtc : data.sessionStartedAtUtc + 'Z')
+      : undefined
     return {
       type,
       prompt: data.prompt,
@@ -184,7 +170,8 @@ class ApiClient {
       correct: data.correct ?? false,
       penaltyMsAdded: data.penaltyMsAdded,
       quizCompleted: data.quizCompleted,
-      totalMs: data.totalMs
+      totalMs: data.totalMs,
+      totalPenaltyMs: data.totalPenaltyMs
     }
   }
 

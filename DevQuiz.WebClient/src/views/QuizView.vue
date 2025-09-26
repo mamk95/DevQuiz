@@ -92,8 +92,8 @@ const testResult = ref<boolean | null>(null)
 // Timer tracking
 const sessionStartTime = ref<Date | null>(null)
 const elapsedMs = ref(0)
-// Display-only penalty counter (doesn't affect backend)
-const displayPenaltyCount = ref(0)
+// Total penalty from API
+const totalPenaltyMs = ref(0)
 
 const currentQuestion = computed(() => quizStore.currentQuestion)
 
@@ -105,9 +105,13 @@ const formattedElapsedTime = computed(() => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 })
 
-// Display-only penalty time
+// Display total penalty time from API
 const displayPenaltyTime = computed(() => {
-  return displayPenaltyCount.value > 0 ? `+${displayPenaltyCount.value}s penalty` : ''
+  if (totalPenaltyMs.value > 0) {
+    const penaltySeconds = Math.floor(totalPenaltyMs.value / 1000)
+    return `+${penaltySeconds}s penalty`
+  }
+  return ''
 })
 
 let penaltyTimeout: ReturnType<typeof setTimeout>
@@ -123,7 +127,6 @@ onMounted(() => {
   // Timer will be initialized when the current question is loaded
   timerInterval = setInterval(() => {
     if (sessionStartTime.value) {
-      // Both Date.now() and sessionStartTime.getTime() are in UTC milliseconds
       elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
     }
   }, 1000)
@@ -172,6 +175,10 @@ const submitMultipleChoice = async (answer: string) => {
     lastAnswer.value = answer
 
     if (result.correct) {
+      // Update total penalty even for correct answers (for consistency)
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       if (result.quizCompleted) {
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
@@ -179,9 +186,14 @@ const submitMultipleChoice = async (answer: string) => {
       }
       await loadCurrentQuestion()
     } else {
-      // Increment display-only penalty counter
-      displayPenaltyCount.value += 1
-      showPenalty()
+      // Show penalty message and update total penalty from response
+      if (result.penaltyMsAdded) {
+        showPenalty(result.penaltyMsAdded)
+      }
+      // Update total penalty from API response
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       showResult.value = true
       clearTimeout(resultTimeout)
       resultTimeout = setTimeout(() => {
@@ -206,6 +218,10 @@ const submitCodeFix = async () => {
     testResult.value = result.correct
 
     if (result.correct) {
+      // Update total penalty even for correct answers (for consistency)
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       if (result.quizCompleted) {
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
@@ -215,9 +231,14 @@ const submitCodeFix = async () => {
       testResult.value = null
       await loadCurrentQuestion()
     } else {
-      // Increment display-only penalty counter
-      displayPenaltyCount.value += 1
-      showPenalty()
+      // Show penalty message and update total penalty from response
+      if (result.penaltyMsAdded) {
+        showPenalty(result.penaltyMsAdded)
+      }
+      // Update total penalty from API response
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       setTimeout(() => {
         testResult.value = null
       }, 3000)
@@ -229,8 +250,9 @@ const submitCodeFix = async () => {
   }
 }
 
-const showPenalty = () => {
-  penaltyMessage.value = 'Incorrect! +1 second penalty'
+const showPenalty = (penaltyMs: number) => {
+  const penaltySeconds = Math.floor(penaltyMs / 1000)
+  penaltyMessage.value = `Incorrect! +${penaltySeconds} second${penaltySeconds === 1 ? '' : 's'} penalty`
   clearTimeout(penaltyTimeout)
   penaltyTimeout = setTimeout(() => {
     penaltyMessage.value = ''
