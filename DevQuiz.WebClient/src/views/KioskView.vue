@@ -14,11 +14,11 @@
         </div>
 
         <div v-else-if="leaderboard.length < 3" class="text-center py-12 text-white/70">
-          <Podium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
+          <LeaderboardPodium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
         </div>
 
         <div v-else class="space-y-3">
-          <Podium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
+          <LeaderboardPodium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
           <div
             v-for="(entry, index) in leaderboard.slice(3)"
             :key="index"
@@ -60,7 +60,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useLeaderboardStore } from '@/stores/leaderboard'
 import type { LeaderboardEntry } from '@/lib/api'
 import QRCode from 'qrcode'
-import Podium from '@/components/quiz/LeaderboardPodium.vue'
+import LeaderboardPodium from '@/components/quiz/LeaderboardPodium.vue'
 
 const leaderboardStore = useLeaderboardStore()
 const qrCanvas = ref<HTMLCanvasElement>()
