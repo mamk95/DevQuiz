@@ -47,6 +47,11 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             CreatedAtUtc = DateTime.UtcNow,
         };
 
+        // Select quiz by difficulty
+        var quiz = await db.Quizzes.FirstOrDefaultAsync(q => q.Difficulty == dto.Difficulty, ct);
+        if (quiz == null)
+            return BadRequest(new SessionStartedDto { Success = false, Message = "No quiz found for selected difficulty" });
+
         var session = new Session
         {
             Id = Guid.NewGuid(),
@@ -67,6 +72,8 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
         });
+
+        // Optionally, you could preload the QuizQuestion sequence for the session here if needed
 
         return Ok(new SessionStartedDto { Success = true });
     }
