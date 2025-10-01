@@ -78,29 +78,18 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         var sessionId = GetSessionIdFromCookie();
         if (sessionId == null)
         {
-            // Invalid or missing cookie - delete it to ensure clean state
-            Response.Cookies.Delete("QuizSession", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-            });
+
+           InvalidateSessionCookie();
             return Unauthorized();
         }
 
-        var session = await db.Sessions
-            .Include(s => s.Participant)
-            .FirstOrDefaultAsync(s => s.Id == sessionId.Value, ct);
+        var sessionsQuery = db.Sessions.Include(s => s.Participant);
+        var session = await sessionsQuery.FirstOrDefaultAsync(s => s.Id == sessionId.Value, ct);
 
         if (session == null || session.Participant == null)
         {
-            // Session doesn't exist in database - delete the invalid cookie
-            Response.Cookies.Delete("QuizSession", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-            });
+
+            InvalidateSessionCookie();
             return Unauthorized();
         }
 
@@ -119,15 +108,9 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             success = true,
         };
 
-        // If session is finished, delete the cookie
         if (answeredQuestions >= totalQuestions)
         {
-            Response.Cookies.Delete("QuizSession", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-            });
+            InvalidateSessionCookie();
         }
 
         return Ok(response);
@@ -141,6 +124,16 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             return sessionId;
         }
         return null;
+    }
+
+    private void InvalidateSessionCookie()
+    {
+        Response.Cookies.Delete("QuizSession", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+        });
     }
 
     private static bool IsValidPhone(string phone)

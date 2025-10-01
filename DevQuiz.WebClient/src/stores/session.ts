@@ -35,10 +35,8 @@ export const useSessionStore = defineStore('session', () => {
   async function resumeSession() {
     try {
       const result = await api.resumeSession()
-      console.log(result)
 
       if (result.finished === true) {
-        // Session is completed, clear local state
         clearSession()
         return result
       }
