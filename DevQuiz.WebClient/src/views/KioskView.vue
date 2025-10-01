@@ -79,7 +79,7 @@ onUnmounted(() => {
 
 const formatTime = (ms: number) => {
   const seconds = ms / 1000
-  return `${seconds.toFixed(3)}s`
+  return `${seconds.toFixed(1)}s`
 }
 
 const getRankClass = (rank: number) => {
@@ -120,8 +120,8 @@ const generateQRCode = async () => {
         margin: 2,
         color: {
           dark: '#1e3a8a',
-          light: '#ffffff'
-        }
+          light: '#ffffff',
+        },
       })
     } catch {
       // Failed to generate QR code
@@ -129,5 +129,3 @@ const generateQRCode = async () => {
   }
 }
 </script>
-
-<style scoped lang="scss"></style>
