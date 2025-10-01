@@ -32,6 +32,27 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  async function resumeSession() {
+    try {
+      const result = await api.resumeSession()
+
+      if (result.finished === true) {
+        clearSession()
+        return result
+      }
+
+      participantName.value = result.participantName
+      phone.value = result.participantPhone
+      hasSession.value = true
+      currentQuestionIndex.value = result.questionIndex
+      totalTimeMs.value = result.totalTimeMs
+      return result
+    } catch (error) {
+      hasSession.value = false
+      throw error
+    }
+  }
+
   function setTotalTime(ms: number) {
     totalTimeMs.value = ms
   }
@@ -57,8 +78,9 @@ export const useSessionStore = defineStore('session', () => {
     totalQuestions,
     totalTimeMs,
     startSession,
+    resumeSession,
     setTotalTime,
     incrementQuestionIndex,
-    clearSession
+    clearSession,
   }
 })

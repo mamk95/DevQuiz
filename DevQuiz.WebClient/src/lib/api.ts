@@ -38,6 +38,16 @@ export interface StartSessionResponse {
   message?: string
 }
 
+export interface ResumeSessionResponse {
+  questionIndex: number
+  finished: boolean
+  participantName: string
+  participantPhone: string
+  totalTimeMs: number | null
+  success: boolean
+  message?: string
+}
+
 export interface Question {
   type?: 'MultipleChoice' | 'CodeFix'
   prompt?: string
@@ -111,8 +121,22 @@ class ApiClient {
     const data = await this.handleResponse<{ success: boolean; message?: string }>(response)
     return {
       success: data.success ?? false,
-      message: data.message
+      message: data.message,
     }
+  }
+
+  async resumeSession(): Promise<ResumeSessionResponse> {
+    const response = await fetch(`${this.baseUrl}/session/resume`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const data = await this.handleResponse<ResumeSessionResponse>(response)
+
+    return data
   }
 
   async getCurrentQuestion(): Promise<Question> {
@@ -141,7 +165,7 @@ class ApiClient {
       testCode: data.testCode,
       done: data.done,
       totalMs: data.totalMs,
-      questionIndex: data.questionIndex
+      questionIndex: data.questionIndex,
     }
   }
 
@@ -161,7 +185,7 @@ class ApiClient {
       correct: data.correct ?? false,
       penaltyMsAdded: data.penaltyMsAdded,
       quizCompleted: data.quizCompleted,
-      totalMs: data.totalMs
+      totalMs: data.totalMs,
     }
   }
 
@@ -172,9 +196,9 @@ class ApiClient {
 
     const data = await this.handleResponse<RawLeaderboardEntry[]>(response)
 
-    return data.map(entry => ({
+    return data.map((entry) => ({
       name: entry.name ?? '',
-      totalMs: entry.totalMs ?? 0
+      totalMs: entry.totalMs ?? 0,
     }))
   }
 }
