@@ -36,7 +36,7 @@
           :key="avatar"
           type="button"
           class="avatar-option"
-          :class="selectedAvatar === avatar ? 'selected' : ''"
+          :class="{ selected: selectedAvatar === avatar }"
           @click="selectAvatar(avatar)"
           aria-label="Select avatar"
         >
@@ -52,9 +52,6 @@ import { ref, computed, onMounted } from 'vue'
 
 // Props: inputHeight and containerWidth for sizing
 const props = defineProps<{ inputHeight?: number; containerWidth?: number }>()
-
-// Emits: update:modelValue for v-model
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 // v-model for selected avatar
 const selectedAvatar = defineModel<string>()
@@ -76,7 +73,6 @@ onMounted(() => {
   }
 })
 
-// Avatar circle sizing: 1.5x the name input height
 const circleStyle = computed(() => {
   const size = props.inputHeight ? `${props.inputHeight * 1.5}px` : '72px'
   return {
@@ -100,7 +96,6 @@ const menuStyle = computed(() => {
   }
 })
 
-// Toggle avatar menu open/close
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
@@ -108,7 +103,6 @@ function toggleMenu() {
 // Select an avatar and close menu
 function selectAvatar(avatar: string) {
   selectedAvatar.value = avatar
-  emit('update:modelValue', avatar)
   menuOpen.value = false
 }
 </script>
@@ -125,7 +119,7 @@ function selectAvatar(avatar: string) {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: 0.2s;
   z-index: 1;
 }
 .arrow-icon {
