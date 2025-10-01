@@ -20,14 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 
 const selected = defineModel<string>()
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 function select(difficulty: string) {
   selected.value = difficulty
-  emit('update:modelValue', difficulty)
 }
 
 // Default to 'noob' if not set
