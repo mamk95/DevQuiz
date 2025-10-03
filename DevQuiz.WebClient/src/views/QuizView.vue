@@ -1,9 +1,9 @@
 <template>
-  <div class="QuizView min-h-screen bg-gray-50 p-4">
+  <div class="QuizView min-h-screen p-4">
     <QuizLoading v-if="quizStore.loading" />
 
     <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto pt-8">
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div class="bg-primary rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <QuizHeader
           :current-index="sessionStore.currentQuestionIndex"
@@ -13,7 +13,7 @@
 
         <!-- Question Content -->
         <div class="p-6">
-          <h2 class="text-xl font-semibold mb-6 text-gray-800">{{ currentQuestion.prompt }}</h2>
+          <h2 class="text-xl font-semibold mb-6">{{ currentQuestion.prompt }}</h2>
 
           <!-- Multiple Choice -->
           <MultipleChoiceQuestion
@@ -196,5 +196,3 @@ const loadCurrentQuestion = async () => {
   }
 }
 </script>
-
-<style scoped lang="scss"></style>

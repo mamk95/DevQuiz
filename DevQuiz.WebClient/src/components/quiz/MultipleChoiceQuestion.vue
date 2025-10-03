@@ -9,7 +9,10 @@
         'w-full p-4 text-left rounded-lg border-2 transition-all duration-200',
         selectedChoice === choice && !showResult
           ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 hover:border-blue-400 hover:bg-blue-50',
+          : isDark
+            ? 'border-gray-200 hover:border-blue-400 hover:bg-blue-900/30'
+            : 'border-gray-200 hover:border-blue-400 hover:bg-blue-50',
+
         disabled && 'opacity-50 cursor-not-allowed',
         showResult &&
           lastAnswer === choice &&
@@ -19,10 +22,7 @@
     >
       <div class="flex items-center">
         <span class="flex-1">{{ choice }}</span>
-        <span
-          v-if="showResult && lastAnswer === choice && !wasCorrect"
-          class="text-red-600 ml-2"
-        >
+        <span v-if="showResult && lastAnswer === choice && !wasCorrect" class="text-red-600 ml-2">
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
@@ -45,7 +45,16 @@ defineProps<{
   lastAnswer: string | null
   wasCorrect: boolean
 }>()
+import { useDark } from '@vueuse/core'
 
+const isDark = useDark({
+  selector: 'html',
+  attribute: 'class',
+  valueDark: 'dark',
+  valueLight: '',
+  storageKey: 'theme-preference',
+  storage: localStorage,
+})
 defineEmits<{
   submit: [answer: string]
 }>()

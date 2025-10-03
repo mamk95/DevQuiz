@@ -35,7 +35,9 @@
         </div>
       </div>
 
-      <div class="w-96 bg-white/10 backdrop-blur rounded-2xl p-8 flex flex-col items-center justify-center">
+      <div
+        class="w-96 bg-white/10 backdrop-blur rounded-2xl p-8 flex flex-col items-center justify-center"
+      >
         <h2 class="text-2xl font-bold mb-6">Join the Quiz!</h2>
 
         <div class="bg-white p-4 rounded-lg mb-6">
@@ -120,8 +122,8 @@ const generateQRCode = async () => {
         margin: 2,
         color: {
           dark: '#1e3a8a',
-          light: '#ffffff'
-        }
+          light: '#ffffff',
+        },
       })
     } catch {
       // Failed to generate QR code
@@ -129,5 +131,3 @@ const generateQRCode = async () => {
   }
 }
 </script>
-
-<style scoped lang="scss"></style>

@@ -1,94 +1,102 @@
 <template>
-  <div class="JoinView min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
-
-      <form @submit.prevent="handleJoin" class="space-y-6">
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-            Name
-          </label>
-          <input
-            id="name"
-            v-model="name"
-            type="text"
-            required
-            maxlength="64"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            placeholder="Enter your name"
-          />
-        </div>
-
-        <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
-          </label>
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <div class="flex gap-2 w-full sm:w-auto">
-              <select
-                v-if="!isCustomCode"
-                :value="countryCode"
-                @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white sm:w-auto"
-              >
-                <option v-for="country in commonCountryCodes" :key="country.code" :value="country.code">
-                  {{ country.code }} {{ country.country }}
-                </option>
-                <option value="custom">Other...</option>
-              </select>
-              <div v-else class="relative w-full sm:w-auto">
-                <input
-                  v-model="customCountryCode"
-                  @input="handleCustomCodeInput"
-                  type="text"
-                  placeholder="+XXX"
-                  maxlength="6"
-                  class="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:w-32"
-                />
-                <button
-                  type="button"
-                  @click="handleCountryChange('+47')"
-                  class="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                  title="Back to country list"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
+  <div class="JoinView flex items-center justify-center p-4">
+    <div>
+      <div class="max-w-md w-full rounded-lg shadow-lg p-8 bg-secondary">
+        <form @submit.prevent="handleJoin" class="space-y-6">
+          <div>
+            <label for="name" class="block text-sm font-medium mb-2"> Name </label>
             <input
-              id="phone"
-              v-model="phoneDigits"
-              type="tel"
+              id="name"
+              v-model="name"
+              type="text"
               required
-              :pattern="phonePattern"
-              :maxlength="phoneValidation.maxLength"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:flex-1"
-              :placeholder="phonePlaceholder"
-              @input="handlePhoneInput"
+              maxlength="64"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Enter your name"
             />
           </div>
-        </div>
 
-        <div class="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
-          <p class="mb-2">📝 One attempt per phone number</p>
-          <p class="mb-2">📱 Winners will be contacted by phone</p>
-          <p>🔒 Data will be deleted after the event</p>
-        </div>
+          <div>
+            <label for="phone" class="block text-sm font-medium mb-2"> Phone Number </label>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <div class="flex gap-2 w-full sm:w-auto">
+                <select
+                  v-if="!isCustomCode"
+                  :value="countryCode"
+                  @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:w-auto"
+                >
+                  <option
+                    v-for="country in commonCountryCodes"
+                    :key="country.code"
+                    :value="country.code"
+                  >
+                    {{ country.code }} {{ country.country }}
+                  </option>
+                  <option value="custom">Other...</option>
+                </select>
+                <div v-else class="relative w-full sm:w-auto">
+                  <input
+                    v-model="customCountryCode"
+                    @input="handleCustomCodeInput"
+                    type="text"
+                    placeholder="+XXX"
+                    maxlength="6"
+                    class="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:w-32"
+                  />
+                  <button
+                    type="button"
+                    @click="handleCountryChange('+47')"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    title="Back to country list"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <input
+                id="phone"
+                v-model="phoneDigits"
+                type="tel"
+                required
+                :pattern="phonePattern"
+                :maxlength="phoneValidation.maxLength"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:flex-1"
+                :placeholder="phonePlaceholder"
+                @input="handlePhoneInput"
+              />
+            </div>
+          </div>
 
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {{ loading ? 'Starting...' : 'Start Quiz' }}
-        </button>
+          <div class="text-sm p-3 rounded-lg border border-gray-300">
+            <p class="mb-2">📝 One attempt per phone number</p>
+            <p class="mb-2">📱 Winners will be contacted by phone</p>
+            <p>🔒 Data will be deleted after the event</p>
+          </div>
 
-        <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {{ error }}
-        </div>
-      </form>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {{ loading ? 'Starting...' : 'Start Quiz' }}
+          </button>
+
+          <div
+            v-if="error"
+            class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+          >
+            {{ error }}
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -126,22 +134,20 @@ const loading = ref(false)
 const error = ref('')
 
 // Find if current code is in common list
-const knownCountry = computed(() =>
-  commonCountryCodes.find(c => c.code === countryCode.value)
-)
+const knownCountry = computed(() => commonCountryCodes.find((c) => c.code === countryCode.value))
 
 // For custom codes, use generic validation (4-15 digits is standard international range)
 const phoneValidation = computed(() => {
   if (knownCountry.value) {
     return {
       minLength: knownCountry.value.minLength,
-      maxLength: knownCountry.value.maxLength
+      maxLength: knownCountry.value.maxLength,
     }
   }
   // Generic validation for unknown country codes
   return {
     minLength: 4,
-    maxLength: 15
+    maxLength: 15,
   }
 })
 
@@ -221,5 +227,3 @@ const handleJoin = async () => {
   }
 }
 </script>
-
-<style scoped lang="scss"></style>
