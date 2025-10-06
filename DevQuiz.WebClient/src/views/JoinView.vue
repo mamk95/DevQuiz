@@ -153,8 +153,6 @@ onMounted(async () => {
       router.push('/quiz')
       return
     }
-  } catch (err) {
-    console.error('Failed to resume session:', err)
   } finally {
     checkingSession.value = false
   }
@@ -256,3 +254,4 @@ const handleJoin = async () => {
 </script>
 
 <style scoped lang="scss"></style>
+
