@@ -35,7 +35,9 @@
         </div>
       </div>
 
-      <div class="w-96 bg-white/10 backdrop-blur rounded-2xl p-8 flex flex-col items-center justify-center">
+      <div
+        class="w-96 bg-white/10 backdrop-blur rounded-2xl p-8 flex flex-col items-center justify-center"
+      >
         <h2 class="text-2xl font-bold mb-6">Join the Quiz!</h2>
 
         <div class="bg-white p-4 rounded-lg mb-6">
