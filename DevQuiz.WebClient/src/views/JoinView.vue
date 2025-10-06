@@ -139,17 +139,6 @@ const sessionStore = useSessionStore()
 
 const selectedAvatar = ref('')
 
-const inputHeight = ref(0)
-const containerWidth = ref(0)
-const formRowRef: Ref<HTMLElement | null> = ref(null)
-onMounted(() => {
-  const inputEl = document.getElementById('name')
-  if (inputEl) inputHeight.value = inputEl.offsetHeight
-  nextTick(() => {
-    if (formRowRef.value) containerWidth.value = formRowRef.value.offsetWidth
-  })
-})
-
 // Reactive state
 const name = ref('')
 const phoneDigits = ref('')

@@ -45,6 +45,7 @@ export const useSessionStore = defineStore('session', () => {
   function clearSession() {
     participantName.value = ''
     phone.value = ''
+    avatar.value = ''
     hasSession.value = false
     currentQuestionIndex.value = 0
     totalTimeMs.value = null
