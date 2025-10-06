@@ -79,11 +79,11 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         if (sessionId == null)
         {
 
-           InvalidateSessionCookie();
+            InvalidateSessionCookie();
             return Unauthorized();
         }
 
-        var sessionsQuery = db.Sessions.Include(s => s.Participant);
+        var sessionsQuery = db.Sessions.Include(s => s.Participant).Include(s => s.Progresses);
         var session = await sessionsQuery.FirstOrDefaultAsync(s => s.Id == sessionId.Value, ct);
 
         if (session == null || session.Participant == null)
@@ -93,10 +93,18 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             return Unauthorized();
         }
 
+        // Check if session is already completed
+        if (session.CompletedAtUtc != null)
+        {
+            InvalidateSessionCookie();
+            return Unauthorized();
+        }
+
         var totalQuestions = await db.Questions.CountAsync(ct);
-        var answeredQuestions = await db.Progresses
-            .Where(p => p.SessionId == sessionId.Value && p.IsCorrect)
-            .CountAsync(ct);
+        var answeredQuestions = session.Progresses.Count(p => p.IsCorrect);
+
+        // Calculate total time the same way as the final score using loaded progresses
+        var totalTimeMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
 
         var response = new
         {
@@ -104,7 +112,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             finished = answeredQuestions >= totalQuestions,
             participantName = session.Participant.Name,
             participantPhone = session.Participant.Phone,
-            totalTimeMs = (DateTime.UtcNow - session.StartedAtUtc).TotalMilliseconds,
+            totalTimeMs,
             success = true,
         };
 
