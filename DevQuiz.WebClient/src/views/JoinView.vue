@@ -3,11 +3,17 @@
     <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
       <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
 
+      <!-- Avatar selector centered above the form -->
+      <div class="flex justify-center mb-6">
+        <div class="flex flex-col items-center">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Avatar</label>
+          <AvatarSelector v-model="selectedAvatar" :inputHeight="60" :containerWidth="300" />
+        </div>
+      </div>
+
       <form @submit.prevent="handleJoin" class="space-y-6">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-            Name
-          </label>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
           <input
             id="name"
             v-model="name"
@@ -31,7 +37,11 @@
                 @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white sm:w-auto"
               >
-                <option v-for="country in commonCountryCodes" :key="country.code" :value="country.code">
+                <option
+                  v-for="country in commonCountryCodes"
+                  :key="country.code"
+                  :value="country.code"
+                >
                   {{ country.code }} {{ country.country }}
                 </option>
                 <option value="custom">Other...</option>
@@ -52,7 +62,12 @@
                   title="Back to country list"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
                   </svg>
                 </button>
               </div>
@@ -85,7 +100,10 @@
           {{ loading ? 'Starting...' : 'Start Quiz' }}
         </button>
 
-        <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div
+          v-if="error"
+          class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
           {{ error }}
         </div>
       </form>
@@ -94,13 +112,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import type { Ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
-
-const router = useRouter()
-const sessionStore = useSessionStore()
-
+import AvatarSelector from '@/components/AvatarSelector.vue'
 // Common country codes with known validation rules
 const commonCountryCodes = [
   { code: '+47', country: 'Norway', minLength: 8, maxLength: 8 },
@@ -117,6 +134,12 @@ const commonCountryCodes = [
   { code: '+380', country: 'Ukraine', minLength: 9, maxLength: 9 },
 ]
 
+const router = useRouter()
+const sessionStore = useSessionStore()
+
+const selectedAvatar = ref('')
+
+// Reactive state
 const name = ref('')
 const phoneDigits = ref('')
 const countryCode = ref('+47')
@@ -126,22 +149,20 @@ const loading = ref(false)
 const error = ref('')
 
 // Find if current code is in common list
-const knownCountry = computed(() =>
-  commonCountryCodes.find(c => c.code === countryCode.value)
-)
+const knownCountry = computed(() => commonCountryCodes.find((c) => c.code === countryCode.value))
 
 // For custom codes, use generic validation (4-15 digits is standard international range)
 const phoneValidation = computed(() => {
   if (knownCountry.value) {
     return {
       minLength: knownCountry.value.minLength,
-      maxLength: knownCountry.value.maxLength
+      maxLength: knownCountry.value.maxLength,
     }
   }
   // Generic validation for unknown country codes
   return {
     minLength: 4,
-    maxLength: 15
+    maxLength: 15,
   }
 })
 
@@ -210,7 +231,11 @@ const handleJoin = async () => {
   loading.value = true
 
   try {
-    await sessionStore.startSession(name.value, `${countryCode.value}${phoneDigits.value}`)
+    await sessionStore.startSession(
+      name.value,
+      `${countryCode.value}${phoneDigits.value}`,
+      selectedAvatar.value,
+    )
     if (sessionStore.hasSession) {
       router.push('/quiz')
     }
