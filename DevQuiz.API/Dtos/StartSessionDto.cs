@@ -14,4 +14,7 @@ public class StartSessionDto
     [Required]
     [StringLength(16, MinimumLength = 2)]
     public required string Difficulty { get; set; }
+  
+    [StringLength(256, MinimumLength = 1)]
+    public required string AvatarUrl { get; set; }
 }
