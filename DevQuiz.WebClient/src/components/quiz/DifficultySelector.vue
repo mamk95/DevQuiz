@@ -1,5 +1,5 @@
 <template>
-  <div class="DifficultySelector w-full flex justify-between">
+  <div class="DifficultySelector w-full flex flex-col gap-3 sm:flex-row sm:justify-between">
     <button
       type="button"
       :class="['difficulty-btn', selected === 'noob' ? 'selected' : '']"
@@ -33,9 +33,17 @@ if (!selected.value) selected.value = 'noob'
 
 <style scoped lang="scss">
 .DifficultySelector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  @media (min-width: 640px) {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0;
+  }
   .difficulty-btn {
-  width: 47%;
-  min-width: 10rem;
+    width: 100%;
     padding: 0.75rem 0;
     border-radius: 9999px;
     border: 2px solid #d1d5db;
@@ -55,6 +63,9 @@ if (!selected.value) selected.value = 'noob'
     &:hover {
       border-color: #2563eb;
       background: #f3f4f6;
+    }
+    @media (min-width: 640px) {
+      width: 47%;
     }
   }
 }
