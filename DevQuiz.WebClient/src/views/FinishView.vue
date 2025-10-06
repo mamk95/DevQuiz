@@ -5,9 +5,9 @@
 
       <h1 class="text-3xl font-bold mb-4">Quiz Completed!</h1>
 
-      <div class="rounded-lg p-6 mb-6" :class="isDark ? 'bg-gray-10 text-white' : 'bg-blue-50'">
-        <p class="text-sm mb-2 text-black">Your Total Time</p>
-        <p class="text-4xl font-bold text-blue-600">{{ formattedTime }}</p>
+      <div class="rounded-lg p-6 mb-6 bg-gray-10 text-white">
+        <p class="text-sm mb-2">Your Total Time</p>
+        <p class="text-4xl font-bold">{{ formattedTime }}</p>
       </div>
 
       <div class="space-y-2 mb-8">
@@ -29,15 +29,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
-import { useDark } from '@vueuse/core'
-const isDark = useDark({
-  selector: 'html',
-  attribute: 'class',
-  valueDark: 'dark',
-  valueLight: '',
-  storageKey: 'theme-preference',
-  storage: localStorage,
-})
+
 const router = useRouter()
 const sessionStore = useSessionStore()
 

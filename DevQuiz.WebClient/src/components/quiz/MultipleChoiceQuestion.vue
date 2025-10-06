@@ -9,10 +9,7 @@
         'w-full p-4 text-left rounded-lg border-2 transition-all duration-200',
         selectedChoice === choice && !showResult
           ? 'border-blue-500 bg-blue-50'
-          : isDark
-            ? 'border-gray-200 hover:border-blue-400 hover:bg-blue-900/30'
-            : 'border-gray-200 hover:border-blue-400 hover:bg-blue-50',
-
+          : 'border-gray-200 hover:border-blue-400 hover:bg-blue-900/30',
         disabled && 'opacity-50 cursor-not-allowed',
         showResult &&
           lastAnswer === choice &&
@@ -45,16 +42,7 @@ defineProps<{
   lastAnswer: string | null
   wasCorrect: boolean
 }>()
-import { useDark } from '@vueuse/core'
 
-const isDark = useDark({
-  selector: 'html',
-  attribute: 'class',
-  valueDark: 'dark',
-  valueLight: '',
-  storageKey: 'theme-preference',
-  storage: localStorage,
-})
 defineEmits<{
   submit: [answer: string]
 }>()
