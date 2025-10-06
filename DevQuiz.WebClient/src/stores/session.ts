@@ -13,9 +13,9 @@ export const useSessionStore = defineStore('session', () => {
 
   const isAuthenticated = computed(() => hasSession.value)
 
-  async function startSession(name: string, phoneNumber: string, avatarUrl: string) {
+  async function startSession(name: string, phoneNumber: string, difficulty: string, avatarUrl: string) {
     try {
-      const result = await api.startSession(name, phoneNumber, avatarUrl)
+      const result = await api.startSession(name, phoneNumber, difficulty, avatarUrl)
 
       if (result.success) {
         participantName.value = name

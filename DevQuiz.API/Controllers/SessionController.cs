@@ -48,12 +48,18 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             CreatedAtUtc = DateTime.UtcNow,
         };
 
+        // Select quiz by difficulty
+        var quizExists = await db.Quizzes.AnyAsync(q => q.Difficulty == dto.Difficulty, ct);
+        if (!quizExists)
+            return BadRequest(new SessionStartedDto { Success = false, Message = "No quiz found for selected difficulty" });
+
         var session = new Session
         {
             Id = Guid.NewGuid(),
             ParticipantId = participant.Id,
             CurrentQuestionIndex = 0,
             StartedAtUtc = DateTime.UtcNow,
+            Difficulty = dto.Difficulty,
         };
 
         db.Participants.Add(participant);

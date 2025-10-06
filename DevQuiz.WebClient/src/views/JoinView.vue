@@ -86,6 +86,13 @@
           </div>
         </div>
 
+        <div class="w-full flex flex-col mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Difficulty</label>
+          <div class="flex justify-center w-full">
+            <DifficultySelector v-model="difficulty" />
+          </div>
+        </div>
+
         <div class="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
           <p class="mb-2">📝 One attempt per phone number</p>
           <p class="mb-2">📱 Winners will be contacted by phone</p>
@@ -112,8 +119,8 @@
 </template>
 
 <script setup lang="ts">
-
 import { ref, computed, onMounted, nextTick } from 'vue'
+import DifficultySelector from '@/components/quiz/DifficultySelector.vue'
 import { useRouter } from 'vue-router'
 import type { Ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
@@ -147,6 +154,7 @@ const isCustomCode = ref(false)
 const customCountryCode = ref('')
 const loading = ref(false)
 const error = ref('')
+const difficulty = ref('noob')
 
 // Find if current code is in common list
 const knownCountry = computed(() => commonCountryCodes.find((c) => c.code === countryCode.value))
@@ -234,7 +242,8 @@ const handleJoin = async () => {
     await sessionStore.startSession(
       name.value,
       `${countryCode.value}${phoneDigits.value}`,
-      selectedAvatar.value,
+      difficulty.value,
+      selectedAvatar.value
     )
     if (sessionStore.hasSession) {
       router.push('/quiz')
