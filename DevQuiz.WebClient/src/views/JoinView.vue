@@ -112,12 +112,10 @@
 </template>
 
 <script setup lang="ts">
-const router = useRouter()
-const sessionStore = useSessionStore()
 
 import { ref, computed, onMounted, nextTick } from 'vue'
-import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
+import type { Ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import AvatarSelector from '@/components/AvatarSelector.vue'
 // Common country codes with known validation rules
@@ -136,10 +134,11 @@ const commonCountryCodes = [
   { code: '+380', country: 'Ukraine', minLength: 9, maxLength: 9 },
 ]
 
-// Avatar selection state
+const router = useRouter()
+const sessionStore = useSessionStore()
+
 const selectedAvatar = ref('')
 
-// Lifecycle hooks
 const inputHeight = ref(0)
 const containerWidth = ref(0)
 const formRowRef: Ref<HTMLElement | null> = ref(null)

@@ -15,12 +15,9 @@ public class Participant
     public required string Phone { get; set; }
 
     [Required]
-    [Url]
     public required string AvatarUrl { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }
 
     public ICollection<Session> Sessions { get; set; } = [];
-
-    
 }

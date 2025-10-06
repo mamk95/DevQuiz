@@ -50,10 +50,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 
-// Props: inputHeight and containerWidth for sizing
 const props = defineProps<{ inputHeight?: number; containerWidth?: number }>()
 
-// v-model for selected avatar
 const selectedAvatar = defineModel<string>()
 
 // Auto-load avatars from src/assets/avatars
@@ -62,7 +60,6 @@ const avatarModules = import.meta.glob('@/assets/avatars/*.{png,jpg,jpeg,gif,svg
 })
 const avatars = Object.values(avatarModules).map((mod: any) => mod.default ?? mod)
 
-// Menu open state
 const menuOpen = ref(false)
 
 // Set a random default avatar on mount
@@ -100,7 +97,6 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-// Select an avatar and close menu
 function selectAvatar(avatar: string) {
   selectedAvatar.value = avatar
   menuOpen.value = false
