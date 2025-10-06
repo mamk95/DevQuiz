@@ -71,9 +71,9 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
     }
 
     [HttpGet("resume")]
-    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(ResumeSessionDto), 200)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<object>> GetProgress(CancellationToken ct)
+    public async Task<ActionResult<ResumeSessionDto>> GetProgress(CancellationToken ct)
     {
         var sessionId = GetSessionIdFromCookie();
         if (sessionId == null)
@@ -106,14 +106,14 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         // Calculate total time the same way as the final score using loaded progresses
         var totalTimeMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
 
-        var response = new
+        var response = new ResumeSessionDto
         {
-            questionIndex = session.CurrentQuestionIndex,
-            finished = answeredQuestions >= totalQuestions,
-            participantName = session.Participant.Name,
-            participantPhone = session.Participant.Phone,
-            totalTimeMs,
-            success = true,
+            QuestionIndex = session.CurrentQuestionIndex,
+            Finished = answeredQuestions >= totalQuestions,
+            ParticipantName = session.Participant.Name,
+            ParticipantPhone = session.Participant.Phone,
+            TotalTimeMs = totalTimeMs,
+            Success = true,
         };
 
         if (answeredQuestions >= totalQuestions)
