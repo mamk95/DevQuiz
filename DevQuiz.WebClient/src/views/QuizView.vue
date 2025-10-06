@@ -124,7 +124,7 @@ onMounted(() => {
     if (sessionStartTime.value) {
       elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
     }
-  }, 1000)
+  }, 100)
   
   loadCurrentQuestion()
 })
@@ -148,11 +148,6 @@ watch(currentQuestion, (newQuestion) => {
   lastAnswer.value = null
   showResult.value = false
   testResult.value = null
-  
-  if (newQuestion?.sessionStartedAtUtc && !sessionStartTime.value) {
-    sessionStartTime.value = newQuestion.sessionStartedAtUtc
-    elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
-  }
 })
 
 const submitMultipleChoice = async (answer: string) => {
@@ -173,6 +168,10 @@ const submitMultipleChoice = async (answer: string) => {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
       if (result.quizCompleted) {
+        if (timerInterval) {
+          clearInterval(timerInterval)
+          timerInterval = null
+        }
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
         return
@@ -213,6 +212,10 @@ const submitCodeFix = async () => {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
       if (result.quizCompleted) {
+          if (timerInterval) {
+            clearInterval(timerInterval)
+            timerInterval = null
+          }
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
         return

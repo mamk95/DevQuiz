@@ -150,6 +150,10 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new AnswerResultDto { Correct = false });
             }
 
+            var totalPenaltyMs = await db.Progresses
+                .Where(p => p.SessionId == sessionId.Value)
+                .SumAsync(p => p.PenaltyMs, ct);
+
             if (progress.IsCorrect)
             {
                 await transaction.RollbackAsync(ct);
@@ -163,10 +167,11 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                         Correct = true,
                         QuizCompleted = true,
                         TotalMs = totalMs,
+                        TotalPenaltyMs = totalPenaltyMs,
                     });
                 }
 
-                return Ok(new AnswerResultDto { Correct = true });
+                return Ok(new AnswerResultDto { Correct = true, TotalPenaltyMs = totalPenaltyMs });
             }
 
             var answerText = dto.AnswerText?.Trim() ?? "";
@@ -176,9 +181,10 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 progress.PenaltyMs += WrongAnswerPenaltyMs;
                 await db.SaveChangesAsync(ct);
-                
-                // Calculate total penalty after updating the current progress
-                var currentTotalPenalty = session.Progresses.Sum(p => p.PenaltyMs);
+
+                var newTotalPenaltyMs = await db.Progresses
+                    .Where(p => p.SessionId == sessionId.Value)
+                    .SumAsync(p => p.PenaltyMs, ct);
                 
                 await transaction.CommitAsync(ct);
 
@@ -186,7 +192,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 {
                     Correct = false,
                     PenaltyMsAdded = WrongAnswerPenaltyMs,
-                    TotalPenaltyMs = currentTotalPenalty,
+                    TotalPenaltyMs = newTotalPenaltyMs
                 });
             }
 
@@ -202,7 +208,6 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             if (!nextQuestion)
             {
                 var totalMs = 0;
-                var totalPenalty = 0;
                 var allProgresses = await db.Progresses
                     .Where(p => p.SessionId == sessionId.Value)
                     .ToListAsync(ct);
@@ -210,7 +215,6 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 foreach (var p in allProgresses)
                 {
                     totalMs += (p.DurationMs ?? 0) + p.PenaltyMs;
-                    totalPenalty += p.PenaltyMs;
                 }
 
                 session.CompletedAtUtc = DateTime.UtcNow;
@@ -230,21 +234,17 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                     Correct = true,
                     QuizCompleted = true,
                     TotalMs = totalMs,
-                    TotalPenaltyMs = totalPenalty,
+                    TotalPenaltyMs = totalPenaltyMs,
                 });
             }
 
             await db.SaveChangesAsync(ct);
-            
-            // Calculate total penalty for consistency
-            var sessionTotalPenalty = session.Progresses.Sum(p => p.PenaltyMs);
-            
             await transaction.CommitAsync(ct);
 
             return Ok(new AnswerResultDto 
             { 
                 Correct = true,
-                TotalPenaltyMs = sessionTotalPenalty,
+                TotalPenaltyMs = totalPenaltyMs,
             });
         }
         catch (Exception ex)
