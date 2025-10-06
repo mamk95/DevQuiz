@@ -41,10 +41,10 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
     }
 
     [HttpGet("my-score")]
-    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(LeaderboardMyScoreDto), 200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(404)]
-    public async Task<ActionResult<object>> GetMyScore(CancellationToken ct)
+    public async Task<ActionResult<LeaderboardMyScoreDto>> GetMyScore(CancellationToken ct)
     {
         var sessionId = GetSessionIdFromCookie();
         if (sessionId == null)
@@ -73,23 +73,19 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
         if (result == null)
             return NotFound();
 
-        // Calculate position by counting how many participants finished faster
-        // Position = number of people with better (lower) times + 1
-        var position = await db.Scores
-            .Where(score => 
-                db.Sessions.Any(session => 
-                    session.Id == score.SessionId && 
-                    session.CompletedAtUtc != null && 
-                    score.TotalMs < result.TotalMs))
-            .CountAsync(ct) + 1;
+        // Calculate position and total participants with a single efficient query using joins
+        var completedScores = await db.Scores
+            .Join(
+                db.Sessions,
+                score => score.SessionId,
+                session => session.Id,
+                (score, session) => new { score, session })
+            .Where(x => x.session.CompletedAtUtc != null)
+            .Select(x => x.score.TotalMs)
+            .ToListAsync(ct);
 
-        // Count total number of participants who completed the quiz
-        var totalParticipants = await db.Scores
-            .Where(score => 
-                db.Sessions.Any(session => 
-                    session.Id == score.SessionId && 
-                    session.CompletedAtUtc != null))
-            .CountAsync(ct);
+        var position = completedScores.Count(ms => ms < result.TotalMs) + 1;
+        var totalParticipants = completedScores.Count;
 
         var response = new
         {

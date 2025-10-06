@@ -7,7 +7,7 @@
 
       <div class="bg-blue-50 rounded-lg p-6 mb-6">
         <p class="text-sm text-gray-600 mb-2">Your Current Position</p>
-        <p class="text-4xl font-bold text-blue-600">{{ leaderBoard?.position }}</p>
+        <p class="text-4xl font-bold text-blue-600">{{ leaderBoard?.position ?? 'Unknown' }}</p>
       </div>
 
       <div class="bg-blue-50 rounded-lg p-6 mb-6">
@@ -50,11 +50,9 @@ import { api, type LeaderboardPersonalScore } from '@/lib/api'
 
 const router = useRouter()
 const leaderBoard = ref<LeaderboardPersonalScore | null>(null)
-const sessionStore = useSessionStore()
+const { clearSession } = useSessionStore()
 onMounted(async () => {
-  try {
-    leaderBoard.value = await api.getMyScore()
-  } catch {}
+  leaderBoard.value = await api.getMyScore()
 })
 
 const formattedTime = computed(() => {
@@ -65,7 +63,7 @@ const formattedTime = computed(() => {
 })
 
 const goHome = () => {
-  sessionStore.clearSession()
+  clearSession()
   router.push('/')
 }
 </script>

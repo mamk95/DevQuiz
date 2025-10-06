@@ -74,14 +74,6 @@ export interface LeaderboardPersonalScore {
   completedAt: string
 }
 
-export interface Leader {
-  name: string
-  totalMs: number
-  position: number
-  totalParticipants: number
-  completedAt: string
-}
-
 class ApiClient {
   private baseUrl: string
 
@@ -202,6 +194,10 @@ class ApiClient {
 
     if (response.status === 404) {
       return null
+    }
+
+    if (response.status === 401) {
+      return null // No valid session, treat as no score available
     }
 
     const data = await this.handleResponse<LeaderboardPersonalScore>(response)
