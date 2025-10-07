@@ -93,7 +93,6 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             return Unauthorized();
         }
 
-        // Check if session is already completed
         if (session.CompletedAtUtc != null)
         {
             InvalidateSessionCookie();
@@ -103,7 +102,6 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         var totalQuestions = await db.Questions.CountAsync(ct);
         var answeredQuestions = session.Progresses.Count(p => p.IsCorrect);
 
-        // Calculate total time the same way as the final score using loaded progresses
         var totalTimeMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
 
         var response = new ResumeSessionDto
