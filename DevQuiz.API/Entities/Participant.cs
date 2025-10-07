@@ -22,5 +22,6 @@ public class Participant
     public ICollection<Session> Sessions { get; set; } = [];
 
     [StringLength(128)]
+    [EmailAddress]
     public string? Email { get; set; }
 }

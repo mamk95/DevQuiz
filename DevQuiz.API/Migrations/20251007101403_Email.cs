@@ -16,11 +16,21 @@ namespace DevQuiz.API.Migrations
                 type: "nvarchar(128)",
                 maxLength: 128,
                 nullable: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Participants_Email",
+                table: "Participants",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_Participants_Email",
+                table: "Participants");
+
             migrationBuilder.DropColumn(
                 name: "Email",
                 table: "Participants");
