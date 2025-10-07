@@ -1,8 +1,9 @@
 <template>
-  <div class="flex justify-center items-end gap-8 h-64 mt-8">
+  <div class="flex justify-center items-end gap-8 h-64 mt-32">
     <!-- 1 entry -->
     <div v-if="entries.length === 1" class="flex flex-col items-center">
-      <span class="mb-4 text-sm text-center">{{ entries[0].name || 'Unknown' }}</span>
+
+      <img :src="entries[0].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
 
       <div
         class="w-40 flex justify-center items-center text-white font-bold h-60 flex-col p-12 shadow-lg relative border-4 podium-bg"
@@ -12,6 +13,7 @@
         <span class="text-xs text-white -bottom-1 mt-4">
           {{ formatTime(entries[0].totalMs) }}
         </span>
+        <span class="mb-4 text-sm text-center">{{ entries[0].name || 'Unknown' }}</span>
       </div>
     </div>
 
@@ -19,7 +21,9 @@
     <template v-else-if="entries.length === 2">
       <!-- 2nd Place -->
       <div class="flex flex-col items-center">
-        <span class="mb-4 text-sm text-center">{{ entries[1].name || 'Unknown' }}</span>
+        <img :src="entries[1].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+
+      
 
         <div
           class="w-40 flex justify-center items-center text-white font-bold h-48 flex-col p-12 shadow-lg relative border-4 podium-bg"
@@ -29,12 +33,13 @@
           <span class="text-xs text-white -bottom-1 mt-4">
             {{ formatTime(entries[1].totalMs) }}
           </span>
+            <span class="mb-4 text-sm text-center">{{ entries[1].name || 'Unknown' }}</span>
         </div>
       </div>
 
       <!-- 1st Place -->
       <div class="flex flex-col items-center">
-        <span class="mb-4 text-sm text-center">{{ entries[0].name || 'Unknown' }}</span>
+        <img :src="entries[0].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
         <div
           class="w-40 flex justify-center items-center text-white font-bold h-60 flex-col p-12 shadow-lg relative border-4 podium-bg"
           style="border-color: #fdd209; border-radius: 16px"
@@ -43,6 +48,8 @@
           <span class="text-xs text-white -bottom-1 mt-4">
             {{ formatTime(entries[0].totalMs) }}
           </span>
+          <span class="mb-4 text-sm text-center">{{ entries[0].name || 'Unknown' }}</span>
+
         </div>
       </div>
     </template>
@@ -51,9 +58,9 @@
     <template v-else-if="entries.length >= 3">
       <!-- 2nd Place -->
       <div class="flex flex-col items-center">
-        <span class="mb-4 text-sm text-center">
-          {{ entries[1].name || 'Unknown' }}
-        </span>
+        <img :src="entries[1].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+
+ 
         <div
           class="w-40 flex justify-center items-center text-white font-bold h-48 flex-col p-12 shadow-lg border-4 podium-bg"
           style="border-color: #d3d3d3; border-radius: 16px"
@@ -62,14 +69,17 @@
           <span class="text-xs text-white -bottom-1 mt-4">
             {{ formatTime(entries[1].totalMs) }}
           </span>
+          <span class="mb-4 text-sm text-center">
+              {{ entries[1].name || 'Unknown' }}
+          </span>
         </div>
       </div>
 
       <!-- 1st Place -->
       <div class="flex flex-col items-center">
-        <span class="mb-4 text-sm text-center">
-          {{ entries[0].name || 'Unknown' }}
-        </span>
+        <img :src="entries[0].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+
+
         <div
           class="w-40 flex justify-center items-center text-white font-bold h-60 flex-col p-12 shadow-lg border-4 podium-bg"
           style="border-color: #fdd209; border-radius: 16px"
@@ -78,14 +88,17 @@
           <span class="text-xs text-white -bottom-1 mt-4">
             {{ formatTime(entries[0].totalMs) }}
           </span>
+          <span class="mb-4 text-sm text-center">
+            {{ entries[0].name || 'Unknown' }}
+          </span>
         </div>
       </div>
 
       <!-- 3rd Place -->
       <div class="flex flex-col items-center">
-        <span class="mb-4 text-sm text-center">
-          {{ entries[2].name || 'Unknown' }}
-        </span>
+        <img :src="entries[2].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+
+
         <div
           class="w-40 flex justify-center items-center text-white font-bold h-40 flex-col p-12 shadow-lg border-4 podium-bg"
           style="border-color: #99550b; border-radius: 16px"
@@ -93,6 +106,9 @@
           <span class="position-text">3</span>
           <span class="text-xs text-white -bottom-8 mt-4">
             {{ formatTime(entries[2].totalMs) }}
+          </span>
+          <span class="mb-4 text-sm text-center">
+            {{ entries[2].name || 'Unknown' }}
           </span>
         </div>
       </div>

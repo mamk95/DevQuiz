@@ -27,6 +27,7 @@
             <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
               {{ index + 4 }}
             </div>
+            <img :src="entry.avatarUrl" alt="Avatar" class="w-12 h-12 rounded-full" />
             <div class="flex-1">
               <p class="font-semibold text-lg">{{ entry.name }}</p>
             </div>
