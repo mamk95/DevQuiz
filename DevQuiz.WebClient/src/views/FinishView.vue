@@ -10,14 +10,16 @@
         <p class="text-4xl font-bold text-blue-600">{{ formattedTime }}</p>
       </div>
 
-      <div class="text-gray-700 space-y-2 mb-8">
+      <div class="text-gray-700 space-y-2 mb-6">
         <p class="text-lg">Thank you for participating!</p>
         <p class="text-sm text-gray-600">Winners will be contacted by phone</p>
       </div>
 
+      <ContactForm />
+
       <button
         @click="goHome"
-        class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+        class="mt-6 px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
       >
         Back to Home
       </button>
@@ -29,6 +31,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import ContactForm from '@/components/ContactForm.vue'
 
 const router = useRouter()
 const sessionStore = useSessionStore()
