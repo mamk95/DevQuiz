@@ -38,6 +38,7 @@ export interface StartSessionRequest {
 
 export interface StartSessionResponse {
   success: boolean
+  totalQuestions?: number
   message?: string
 }
 
@@ -113,10 +114,11 @@ class ApiClient {
       body: JSON.stringify({ name, phone, difficulty, avatarUrl }),
     })
 
-    const data = await this.handleResponse<{ success: boolean; message?: string }>(response)
+    const data = await this.handleResponse<{ success: boolean; message?: string; totalQuestions?: number }>(response)
     return {
       success: data.success ?? false,
-      message: data.message
+      message: data.message,
+      totalQuestions: data.totalQuestions
     }
   }
 

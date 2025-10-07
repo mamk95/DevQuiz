@@ -48,11 +48,21 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             CreatedAtUtc = DateTime.UtcNow,
         };
 
-        // Select quiz by difficulty
-        var quizExists = await db.Quizzes.AnyAsync(q => q.Difficulty == dto.Difficulty, ct);
-        if (!quizExists)
+        var quizId = await db.Quizzes
+            .Where(q => q.Difficulty == dto.Difficulty)
+            .Select(q => q.Id)
+            .FirstOrDefaultAsync(ct);
+            
+        if (quizId == 0)
             return BadRequest(new SessionStartedDto { Success = false, Message = "No quiz found for selected difficulty" });
 
+        var totalQuestions = await db.QuizQuestions
+            .Where(qq => qq.QuizId == quizId)
+            .CountAsync(ct);
+            
+        if (totalQuestions == 0)
+            return BadRequest(new SessionStartedDto { Success = false, Message = "Quiz has no questions configured" });
+            
         var session = new Session
         {
             Id = Guid.NewGuid(),
@@ -74,7 +84,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
         });
 
-        return Ok(new SessionStartedDto { Success = true });
+        return Ok(new SessionStartedDto { Success = true, TotalQuestions = totalQuestions });
     }
 
     private static bool IsValidPhone(string phone)
