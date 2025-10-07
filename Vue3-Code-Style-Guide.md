@@ -27,7 +27,7 @@ Write SFC blocks in this order and keep one blank line between each block:
 
 ## Template rules
 
-- Put a blank line between sibling root elements. This improves scanability in larger templates.
+- Put a blank line between all sibling elements at any nesting level. This improves scanability in templates.
 - Attribute wrapping: if a tag wraps, place one attribute per line, aligned and indented once.
 - Casing: use kebab‑case for event names in templates; use camelCase in scripts. Use PascalCase for component names in templates.
 - Lists: always provide a stable `:key` for `v-for`.
@@ -103,7 +103,7 @@ Maintain this strict ordering inside `<script setup>` to keep files predictable:
 ## Whitespace & spacing details
 
 - One blank line between logical sections (imports/types/props/… blocks as listed above).
-- One blank line between top‑level template siblings.
+- One blank line between all template siblings at any nesting level.
 - No multiple consecutive blank lines.
 - Space after commas and around infix operators.
 - Object/array literals: multiline when they exceed the line length; trailing comma on multiline.

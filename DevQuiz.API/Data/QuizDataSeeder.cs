@@ -14,7 +14,6 @@ public static class QuizDataSeeder
         {
             new()
             {
-                Sequence = 1,
                 Type = QuestionType.CodeFix,
                 Prompt = "Fix the string so the check passes.",
                 CorrectAnswer = "const text = \"hello world\";",
@@ -26,7 +25,6 @@ public static class QuizDataSeeder
             },
             new()
             {
-                Sequence = 2,
                 Type = QuestionType.MultipleChoice,
                 Prompt = "What is the output of `for (var x in ['a','b','c']) console.log(x)`?",
                 CorrectAnswer = "0, 1, 2",
@@ -40,7 +38,6 @@ public static class QuizDataSeeder
             },
             new()
             {
-                Sequence = 3,
                 Type = QuestionType.MultipleChoice,
                 Prompt = "What does `console.log('5' + 3 - 2)` print?",
                 CorrectAnswer = "51",
@@ -54,7 +51,6 @@ public static class QuizDataSeeder
             },
             new()
             {
-                Sequence = 4,
                 Type = QuestionType.MultipleChoice,
                 Prompt = "Which HTTP status code means 'Too Many Requests'?",
                 CorrectAnswer = "429",
@@ -68,7 +64,6 @@ public static class QuizDataSeeder
             },
             new()
             {
-                Sequence = 5,
                 Type = QuestionType.MultipleChoice,
                 Prompt = "Which command shows the commit history?",
                 CorrectAnswer = "git log",
@@ -82,7 +77,6 @@ public static class QuizDataSeeder
             },
             new()
             {
-                Sequence = 6,
                 Type = QuestionType.MultipleChoice,
                 Prompt = "Which range equals >=1.2.3 <2.0.0?",
                 CorrectAnswer = "^1.2.3",
@@ -96,7 +90,6 @@ public static class QuizDataSeeder
             },
             new()
             {
-                Sequence = 7,
                 Type = QuestionType.MultipleChoice,
                 Prompt = "Which HTTP method is used for a CORS preflight?",
                 CorrectAnswer = "OPTIONS",
@@ -111,6 +104,38 @@ public static class QuizDataSeeder
         };
 
         db.Questions.AddRange(questions);
+        await db.SaveChangesAsync();
+
+        // Create two quizzes
+        var quizNoob = new Quiz { Name = "Noob Quiz", Difficulty = "Noob" };
+        var quizNerd = new Quiz { Name = "Nerd Quiz", Difficulty = "Nerd" };
+        db.Quizzes.AddRange(quizNoob, quizNerd);
+        await db.SaveChangesAsync();
+
+        // Link first 3 questions to Noob, remaining 4 to Nerd
+        var quizQuestions = new List<QuizQuestion>();
+        for (int i = 0; i < questions.Count; i++)
+        {
+            if (i < 3)
+            {
+                quizQuestions.Add(new QuizQuestion
+                {
+                    QuizId = quizNoob.Id,
+                    QuestionId = questions[i].Id,
+                    Sequence = i + 1
+                });
+            }
+            else
+            {
+                quizQuestions.Add(new QuizQuestion
+                {
+                    QuizId = quizNerd.Id,
+                    QuestionId = questions[i].Id,
+                    Sequence = (i - 3) + 1
+                });
+            }
+        }
+        db.QuizQuestions.AddRange(quizQuestions);
         await db.SaveChangesAsync();
     }
 }
