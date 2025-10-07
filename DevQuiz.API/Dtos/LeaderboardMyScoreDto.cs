@@ -9,7 +9,5 @@ public class LeaderboardMyScoreDto
 
     public int TotalParticipants { get; set; }
 
-    public DateTime CompletedAtUtc { get; set; }
-
-
+    public DateTime? CompletedAtUtc { get; set; }
 }
