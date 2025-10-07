@@ -20,4 +20,7 @@ public class Participant
     public DateTime CreatedAtUtc { get; set; }
 
     public ICollection<Session> Sessions { get; set; } = [];
+
+    [StringLength(128)]
+    public string? Email { get; set; }
 }
