@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/[controller]")]
 public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : ControllerBase
 {
-    private const int WrongAnswerPenaltyMs = 1000; // milliseconds
+    private const int WrongAnswerPenaltyMs = 10000; // milliseconds
 
     [HttpGet("current")]
     [ProducesResponseType(typeof(CurrentQuestionDto), 200)]
