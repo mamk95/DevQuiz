@@ -3,7 +3,19 @@
     <QuizLoading v-if="quizStore.loading" />
 
     <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto pt-8">
-      <div class="bg-primary rounded-lg shadow-lg overflow-hidden bg-secondary">
+      <!-- Timer Display -->
+      <div class="bg-primary rounded-lg shadow-md mb-4 p-4">
+        <div class="flex justify-between items-center">
+          <div class="text-sm text-gray-600">
+            Total Time: <span class="font-mono text-lg font-semibold text-blue-600">{{ formattedElapsedTime }}</span>
+          </div>
+          <div v-if="displayPenaltyTime" class="text-sm text-red-500 font-medium">
+            {{ displayPenaltyTime }}
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <QuizHeader
           :current-index="sessionStore.currentQuestionIndex"
@@ -77,22 +89,52 @@ const wasCorrect = ref(false)
 const showResult = ref(false)
 const testResult = ref<boolean | null>(null)
 
+const sessionStartTime = ref<Date | null>(null)
+const elapsedMs = ref(0)
+const totalPenaltyMs = ref(0)
+
 const currentQuestion = computed(() => quizStore.currentQuestion)
+
+const formattedElapsedTime = computed(() => {
+  const totalSeconds = Math.floor(elapsedMs.value / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+})
+
+const displayPenaltyTime = computed(() => {
+  if (totalPenaltyMs.value > 0) {
+    const penaltySeconds = Math.floor(totalPenaltyMs.value / 1000)
+    return `+${penaltySeconds}s penalty`
+  }
+  return ''
+})
 
 let penaltyTimeout: ReturnType<typeof setTimeout>
 let resultTimeout: ReturnType<typeof setTimeout>
+let timerInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   if (!sessionStore.hasSession) {
     router.push('/')
     return
   }
+  
+  timerInterval = setInterval(() => {
+    if (sessionStartTime.value) {
+      elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
+    }
+  }, 100)
+  
   loadCurrentQuestion()
 })
 
 onUnmounted(() => {
   clearTimeout(penaltyTimeout)
   clearTimeout(resultTimeout)
+  if (timerInterval) {
+    clearInterval(timerInterval)
+  }
 })
 
 // Initialize code editor with initial code when question loads
@@ -122,14 +164,26 @@ const submitMultipleChoice = async (answer: string) => {
     lastAnswer.value = answer
 
     if (result.correct) {
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       if (result.quizCompleted) {
+        if (timerInterval) {
+          clearInterval(timerInterval)
+          timerInterval = null
+        }
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
         return
       }
       await loadCurrentQuestion()
     } else {
-      showPenalty()
+      if (result.penaltyMsAdded) {
+        showPenalty(result.penaltyMsAdded)
+      }
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       showResult.value = true
       clearTimeout(resultTimeout)
       resultTimeout = setTimeout(() => {
@@ -154,7 +208,14 @@ const submitCodeFix = async () => {
     testResult.value = result.correct
 
     if (result.correct) {
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       if (result.quizCompleted) {
+          if (timerInterval) {
+            clearInterval(timerInterval)
+            timerInterval = null
+          }
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
         return
@@ -163,7 +224,12 @@ const submitCodeFix = async () => {
       testResult.value = null
       await loadCurrentQuestion()
     } else {
-      showPenalty()
+      if (result.penaltyMsAdded) {
+        showPenalty(result.penaltyMsAdded)
+      }
+      if (result.totalPenaltyMs !== undefined) {
+        totalPenaltyMs.value = result.totalPenaltyMs
+      }
       setTimeout(() => {
         testResult.value = null
       }, 3000)
@@ -175,8 +241,9 @@ const submitCodeFix = async () => {
   }
 }
 
-const showPenalty = () => {
-  penaltyMessage.value = 'Incorrect! +1 second penalty'
+const showPenalty = (penaltyMs: number) => {
+  const penaltySeconds = Math.floor(penaltyMs / 1000)
+  penaltyMessage.value = `Incorrect! +${penaltySeconds} second${penaltySeconds === 1 ? '' : 's'} penalty`
   clearTimeout(penaltyTimeout)
   penaltyTimeout = setTimeout(() => {
     penaltyMessage.value = ''
@@ -186,6 +253,12 @@ const showPenalty = () => {
 const loadCurrentQuestion = async () => {
   try {
     const question = await quizStore.getCurrentQuestion()
+    
+    if (question?.sessionStartedAtUtc && !sessionStartTime.value) {
+      sessionStartTime.value = question.sessionStartedAtUtc
+      elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
+    }
+    
     if (question?.done) {
       sessionStore.setTotalTime(question.totalMs!)
       router.push('/finish')

@@ -4,6 +4,7 @@ using DevQuiz.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DevQuiz.API.Migrations
 {
     [DbContext(typeof(QuizDbContext))]
-    partial class QuizDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250925114728_AddAvatarUrlToParticipant")]
+    partial class AddAvatarUrlToParticipant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -111,60 +114,18 @@ namespace DevQuiz.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int");
+
                     b.Property<byte>("Type")
                         .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Questions");
-                });
-
-            modelBuilder.Entity("DevQuiz.API.Entities.Quiz", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Difficulty")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Quizzes");
-                });
-
-            modelBuilder.Entity("DevQuiz.API.Entities.QuizQuestion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("QuizId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Sequence")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestionId");
-
-                    b.HasIndex("QuizId", "QuestionId")
+                    b.HasIndex("Sequence")
                         .IsUnique();
 
-                    b.ToTable("QuizQuestions");
+                    b.ToTable("Questions");
                 });
 
             modelBuilder.Entity("DevQuiz.API.Entities.Score", b =>
@@ -195,11 +156,6 @@ namespace DevQuiz.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
-
-                    b.Property<string>("Difficulty")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
 
                     b.Property<Guid>("ParticipantId")
                         .HasColumnType("uniqueidentifier");
@@ -233,25 +189,6 @@ namespace DevQuiz.API.Migrations
                     b.Navigation("Session");
                 });
 
-            modelBuilder.Entity("DevQuiz.API.Entities.QuizQuestion", b =>
-                {
-                    b.HasOne("DevQuiz.API.Entities.Question", "Question")
-                        .WithMany("QuizQuestions")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DevQuiz.API.Entities.Quiz", "Quiz")
-                        .WithMany("QuizQuestions")
-                        .HasForeignKey("QuizId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
-
-                    b.Navigation("Quiz");
-                });
-
             modelBuilder.Entity("DevQuiz.API.Entities.Score", b =>
                 {
                     b.HasOne("DevQuiz.API.Entities.Session", "Session")
@@ -282,13 +219,6 @@ namespace DevQuiz.API.Migrations
             modelBuilder.Entity("DevQuiz.API.Entities.Question", b =>
                 {
                     b.Navigation("Progresses");
-
-                    b.Navigation("QuizQuestions");
-                });
-
-            modelBuilder.Entity("DevQuiz.API.Entities.Quiz", b =>
-                {
-                    b.Navigation("QuizQuestions");
                 });
 
             modelBuilder.Entity("DevQuiz.API.Entities.Session", b =>
