@@ -1,7 +1,7 @@
 <template>
-  <div class="KioskView min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 text-white p-8">
+  <div class="KioskView min-h-screen bg-gradient-to-br bg-primary text-white p-8">
     <div class="max-w-7xl mx-auto h-full flex gap-8">
-      <div class="flex-1 bg-white/10 backdrop-blur rounded-2xl p-8">
+      <div class="flex-1">
         <h1 class="text-4xl font-bold mb-8 text-center">Leaderboard</h1>
 
         <div v-if="loading" class="flex justify-center py-12">
@@ -17,7 +17,7 @@
           <div
             v-for="(entry, index) in leaderboard"
             :key="index"
-            class="flex items-center gap-4 p-4 rounded-lg bg-white/10 backdrop-blur hover:bg-white/20 transition-colors"
+            class="flex items-center gap-4 p-4 rounded-xl bg-secondary"
           >
             <div
               class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
@@ -36,7 +36,7 @@
       </div>
 
       <div
-        class="w-96 bg-white/10 backdrop-blur rounded-2xl p-8 flex flex-col items-center justify-center"
+        class="w-96 bg-secondary rounded-2xl p-8 flex flex-col items-center justify-center"
       >
         <h2 class="text-2xl font-bold mb-6">Join the Quiz!</h2>
 
