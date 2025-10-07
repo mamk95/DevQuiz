@@ -21,10 +21,11 @@
           Capgemini!
         </p>
         <a
+          target="_blank"
           href="https://www.capgemini.com/no-no/careers/join-capgemini/job-search/?country_code=no-no&country_name=Norway&location=Trondheim&size=15"
           class="text-blue-600 underline"
-          >Apply here</a
-        >
+          >Apply here
+          </a>
       </div>
 
       <div class="text-gray-700 space-y-2 mb-8">
