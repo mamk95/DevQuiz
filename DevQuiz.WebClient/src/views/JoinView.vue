@@ -2,34 +2,18 @@
   <div class="JoinView flex items-center justify-center p-4">
     <div>
       <div class="max-w-md w-full rounded-lg shadow-lg p-8 bg-secondary">
-        <form @submit.prevent="handleJoin" class="space-y-6">
-          <div>
-            <label for="name" class="block text-sm font-medium mb-2"> Name </label>
-            <input
-              id="name"
-              v-model="name"
-              type="text"
-              required
-              maxlength="64"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              placeholder="Enter your name"
-            />
-          </div>
-  <div class="JoinView min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
 
       <!-- Avatar selector centered above the form -->
       <div class="flex justify-center mb-6">
         <div class="flex flex-col items-center">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Avatar</label>
+          <label class="block text-sm font-medium mb-2">Avatar</label>
           <AvatarSelector v-model="selectedAvatar" :inputHeight="60" :containerWidth="300" />
         </div>
       </div>
 
       <form @submit.prevent="handleJoin" class="space-y-6">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          <label for="name" class="block text-sm font-medium mb-2">Name</label>
           <input
             id="name"
             v-model="name"
@@ -72,7 +56,7 @@
                   <button
                     type="button"
                     @click="handleCountryChange('+47')"
-                    class="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 p-1 transition-colors cursor-pointer"
                     title="Back to country list"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,69 +83,10 @@
               />
             </div>
           </div>
-        <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
-          </label>
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <div class="flex gap-2 w-full sm:w-auto">
-              <select
-                v-if="!isCustomCode"
-                :value="countryCode"
-                @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white sm:w-auto"
-              >
-                <option
-                  v-for="country in commonCountryCodes"
-                  :key="country.code"
-                  :value="country.code"
-                >
-                  {{ country.code }} {{ country.country }}
-                </option>
-                <option value="custom">Other...</option>
-              </select>
-              <div v-else class="relative w-full sm:w-auto">
-                <input
-                  v-model="customCountryCode"
-                  @input="handleCustomCodeInput"
-                  type="text"
-                  placeholder="+XXX"
-                  maxlength="6"
-                  class="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:w-32"
-                />
-                <button
-                  type="button"
-                  @click="handleCountryChange('+47')"
-                  class="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                  title="Back to country list"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <input
-              id="phone"
-              v-model="phoneDigits"
-              type="tel"
-              required
-              :pattern="phonePattern"
-              :maxlength="phoneValidation.maxLength"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:flex-1"
-              :placeholder="phonePlaceholder"
-              @input="handlePhoneInput"
-            />
-          </div>
-        </div>
+
 
         <div class="w-full flex flex-col mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Difficulty</label>
+          <label class="block text-sm font-medium mb-2 text-left w-full">Difficulty</label>
           <div class="flex justify-center w-full">
             <DifficultySelector v-model="difficulty" />
           </div>
@@ -195,7 +120,6 @@
         >
           {{ error }}
         </div>
-      </form>
     </div>
   </div>
 </template>

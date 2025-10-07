@@ -4,9 +4,9 @@
 
     <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto pt-8">
       <!-- Timer Display -->
-      <div class="bg-primary rounded-lg shadow-md mb-4 p-4">
+      <div class="bg-secondary rounded-lg shadow-md mb-4 p-4">
         <div class="flex justify-between items-center">
-          <div class="text-sm text-gray-600">
+          <div class="text-sm">
             Total Time: <span class="font-mono text-lg font-semibold text-blue-600">{{ formattedElapsedTime }}</span>
           </div>
           <div v-if="displayPenaltyTime" class="text-sm text-red-500 font-medium">
@@ -15,7 +15,7 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div class="bg-secondary rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <QuizHeader
           :current-index="sessionStore.currentQuestionIndex"
