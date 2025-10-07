@@ -10,4 +10,11 @@ public class StartSessionDto
     [Required]
     [RegularExpression(@"^\+\d{1,5}\d{4,15}$", ErrorMessage = "Phone must be a valid international number (e.g., +1234567890)")]
     public required string Phone { get; set; }
+
+    [Required]
+    [StringLength(16, MinimumLength = 2)]
+    public required string Difficulty { get; set; }
+  
+    [StringLength(256, MinimumLength = 1)]
+    public required string AvatarUrl { get; set; }
 }

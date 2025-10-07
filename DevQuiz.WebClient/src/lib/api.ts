@@ -14,6 +14,7 @@ interface RawQuestion {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: string
 }
 
 interface RawAnswerResponse {
@@ -21,6 +22,7 @@ interface RawAnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 interface RawLeaderboardEntry {
@@ -31,6 +33,7 @@ interface RawLeaderboardEntry {
 export interface StartSessionRequest {
   name: string
   phone: string
+  avatarUrl: string
 }
 
 export interface StartSessionResponse {
@@ -58,6 +61,7 @@ export interface Question {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: Date
 }
 
 export interface AnswerRequest {
@@ -69,6 +73,7 @@ export interface AnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 export interface LeaderboardEntry {
@@ -108,14 +113,14 @@ class ApiClient {
     }
   }
 
-  async startSession(name: string, phone: string): Promise<StartSessionResponse> {
+  async startSession(name: string, phone: string, difficulty: string, avatarUrl:string): Promise<StartSessionResponse> {
     const response = await fetch(`${this.baseUrl}/session/start`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name, phone, difficulty, avatarUrl }),
     })
 
     const data = await this.handleResponse<{ success: boolean; message?: string }>(response)
@@ -156,6 +161,10 @@ class ApiClient {
       type = 'CodeFix'
     }
 
+    // Parse the UTC date string correctly - ensure it's treated as UTC
+    const sessionStartedAtUtc = data.sessionStartedAtUtc 
+      ? new Date(data.sessionStartedAtUtc.endsWith('Z') ? data.sessionStartedAtUtc : data.sessionStartedAtUtc + 'Z')
+      : undefined
     return {
       type,
       prompt: data.prompt,
@@ -166,6 +175,7 @@ class ApiClient {
       done: data.done,
       totalMs: data.totalMs,
       questionIndex: data.questionIndex,
+      sessionStartedAtUtc
     }
   }
 
@@ -186,6 +196,7 @@ class ApiClient {
       penaltyMsAdded: data.penaltyMsAdded,
       quizCompleted: data.quizCompleted,
       totalMs: data.totalMs,
+      totalPenaltyMs: data.totalPenaltyMs
     }
   }
 

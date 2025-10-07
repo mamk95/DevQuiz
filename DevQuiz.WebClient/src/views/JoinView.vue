@@ -3,18 +3,17 @@
     <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
       <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
 
-      <!-- Loading state while checking for existing session -->
-      <div v-if="checkingSession" class="text-center py-8">
-        <div
-          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
-        ></div>
-        <p class="text-gray-600">Checking for existing session...</p>
+      <!-- Avatar selector centered above the form -->
+      <div class="flex justify-center mb-6">
+        <div class="flex flex-col items-center">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Avatar</label>
+          <AvatarSelector v-model="selectedAvatar" :inputHeight="60" :containerWidth="300" />
+        </div>
       </div>
 
-      <!-- Join form -->
-      <form v-else @submit.prevent="handleJoin" class="space-y-6">
+      <form @submit.prevent="handleJoin" class="space-y-6">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2"> Name </label>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
           <input
             id="name"
             v-model="name"
@@ -87,6 +86,13 @@
           </div>
         </div>
 
+        <div class="w-full flex flex-col mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Difficulty</label>
+          <div class="flex justify-center w-full">
+            <DifficultySelector v-model="difficulty" />
+          </div>
+        </div>
+
         <div class="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
           <p class="mb-2">📝 One attempt per phone number</p>
           <p class="mb-2">📱 Winners will be contacted by phone</p>
@@ -113,13 +119,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import DifficultySelector from '@/components/quiz/DifficultySelector.vue'
 import { useRouter } from 'vue-router'
+import type { Ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
-
-const router = useRouter()
-const sessionStore = useSessionStore()
-
+import AvatarSelector from '@/components/AvatarSelector.vue'
 // Common country codes with known validation rules
 const commonCountryCodes = [
   { code: '+47', country: 'Norway', minLength: 8, maxLength: 8 },
@@ -136,6 +141,12 @@ const commonCountryCodes = [
   { code: '+380', country: 'Ukraine', minLength: 9, maxLength: 9 },
 ]
 
+const router = useRouter()
+const sessionStore = useSessionStore()
+
+const selectedAvatar = ref('')
+
+// Reactive state
 const name = ref('')
 const phoneDigits = ref('')
 const countryCode = ref('+47')
@@ -157,6 +168,7 @@ onMounted(async () => {
     checkingSession.value = false
   }
 })
+const difficulty = ref('noob')
 
 // Find if current code is in common list
 const knownCountry = computed(() => commonCountryCodes.find((c) => c.code === countryCode.value))
@@ -241,7 +253,12 @@ const handleJoin = async () => {
   loading.value = true
 
   try {
-    await sessionStore.startSession(name.value, `${countryCode.value}${phoneDigits.value}`)
+    await sessionStore.startSession(
+      name.value,
+      `${countryCode.value}${phoneDigits.value}`,
+      difficulty.value,
+      selectedAvatar.value
+    )
     if (sessionStore.hasSession) {
       router.push('/quiz')
     }

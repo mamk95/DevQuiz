@@ -17,4 +17,6 @@ public class CurrentQuestionDto
     public string? InitialCode { get; set; }
 
     public string? TestCode { get; set; }
+
+    public DateTime? SessionStartedAtUtc { get; set; }
 }
