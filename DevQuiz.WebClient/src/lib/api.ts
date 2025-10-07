@@ -71,6 +71,11 @@ export interface LeaderboardEntry {
   totalMs: number
 }
 
+export interface SubmitEmailResponse {
+  success: boolean
+  message: string
+}
+
 class ApiClient {
   private baseUrl: string
 
@@ -187,6 +192,24 @@ class ApiClient {
       name: entry.name ?? '',
       totalMs: entry.totalMs ?? 0
     }))
+  }
+
+
+  async submitEmail(email: string): Promise<SubmitEmailResponse> {
+    const response = await fetch(`${this.baseUrl}/session/submit-email`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await this.handleResponse<{ success: boolean; message: string }>(response)
+    return {
+      success: data.success ?? false,
+      message: data.message || (data.success ? 'Email submitted successfully' : 'Failed to submit email')
+    }
   }
 }
 
