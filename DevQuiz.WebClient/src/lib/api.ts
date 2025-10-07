@@ -28,6 +28,7 @@ interface RawAnswerResponse {
 interface RawLeaderboardEntry {
   name?: string
   totalMs?: number
+  avatarUrl?: string
 }
 
 export interface StartSessionRequest {
@@ -69,6 +70,7 @@ export interface AnswerResponse {
 export interface LeaderboardEntry {
   name: string
   totalMs: number
+  avatarUrl: string
 }
 
 class ApiClient {
@@ -185,7 +187,8 @@ class ApiClient {
 
     return data.map(entry => ({
       name: entry.name ?? '',
-      totalMs: entry.totalMs ?? 0
+      totalMs: entry.totalMs ?? 0,
+      avatarUrl: entry.avatarUrl ?? ''
     }))
   }
 }
