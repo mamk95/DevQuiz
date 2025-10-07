@@ -39,6 +39,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 Done = true,
                 TotalMs = totalMs,
+                SessionStartedAtUtc = session.StartedAtUtc,
             });
         }
 
@@ -61,6 +62,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 Done = true,
                 TotalMs = totalMs,
+                SessionStartedAtUtc = session.StartedAtUtc,
             });
         }
 
@@ -88,6 +90,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             QuestionIndex = session.CurrentQuestionIndex,
             Type = currentQuestion.Type == QuestionType.MultipleChoice ? "MC" : "CodeFix",
             Prompt = currentQuestion.Prompt,
+            SessionStartedAtUtc = session.StartedAtUtc,
         };
 
         if (currentQuestion.Type == QuestionType.MultipleChoice && !string.IsNullOrEmpty(currentQuestion.ChoicesJson))
@@ -166,6 +169,10 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new AnswerResultDto { Correct = false });
             }
 
+            var totalPenaltyMs = await db.Progresses
+                .Where(p => p.SessionId == sessionId.Value)
+                .SumAsync(p => p.PenaltyMs, ct);
+
             if (progress.IsCorrect)
             {
                 await transaction.RollbackAsync(ct);
@@ -179,10 +186,11 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                         Correct = true,
                         QuizCompleted = true,
                         TotalMs = totalMs,
+                        TotalPenaltyMs = totalPenaltyMs,
                     });
                 }
 
-                return Ok(new AnswerResultDto { Correct = true });
+                return Ok(new AnswerResultDto { Correct = true, TotalPenaltyMs = totalPenaltyMs });
             }
 
             var answerText = dto.AnswerText?.Trim() ?? "";
@@ -192,12 +200,18 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 progress.PenaltyMs += WrongAnswerPenaltyMs;
                 await db.SaveChangesAsync(ct);
+
+                var newTotalPenaltyMs = await db.Progresses
+                    .Where(p => p.SessionId == sessionId.Value)
+                    .SumAsync(p => p.PenaltyMs, ct);
+                
                 await transaction.CommitAsync(ct);
 
                 return Ok(new AnswerResultDto
                 {
                     Correct = false,
                     PenaltyMsAdded = WrongAnswerPenaltyMs,
+                    TotalPenaltyMs = newTotalPenaltyMs
                 });
             }
 
@@ -239,13 +253,18 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                     Correct = true,
                     QuizCompleted = true,
                     TotalMs = totalMs,
+                    TotalPenaltyMs = totalPenaltyMs,
                 });
             }
 
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
-            return Ok(new AnswerResultDto { Correct = true });
+            return Ok(new AnswerResultDto 
+            { 
+                Correct = true,
+                TotalPenaltyMs = totalPenaltyMs,
+            });
         }
         catch (Exception ex)
         {

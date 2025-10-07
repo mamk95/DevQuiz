@@ -14,6 +14,7 @@ interface RawQuestion {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: string
 }
 
 interface RawAnswerResponse {
@@ -21,6 +22,7 @@ interface RawAnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 interface RawLeaderboardEntry {
@@ -49,6 +51,7 @@ export interface Question {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: Date
 }
 
 export interface AnswerRequest {
@@ -60,6 +63,7 @@ export interface AnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 export interface LeaderboardEntry {
@@ -133,6 +137,10 @@ class ApiClient {
       type = 'CodeFix'
     }
 
+    // Parse the UTC date string correctly - ensure it's treated as UTC
+    const sessionStartedAtUtc = data.sessionStartedAtUtc 
+      ? new Date(data.sessionStartedAtUtc.endsWith('Z') ? data.sessionStartedAtUtc : data.sessionStartedAtUtc + 'Z')
+      : undefined
     return {
       type,
       prompt: data.prompt,
@@ -142,7 +150,8 @@ class ApiClient {
       testCode: data.testCode,
       done: data.done,
       totalMs: data.totalMs,
-      questionIndex: data.questionIndex
+      questionIndex: data.questionIndex,
+      sessionStartedAtUtc
     }
   }
 
@@ -162,7 +171,8 @@ class ApiClient {
       correct: data.correct ?? false,
       penaltyMsAdded: data.penaltyMsAdded,
       quizCompleted: data.quizCompleted,
-      totalMs: data.totalMs
+      totalMs: data.totalMs,
+      totalPenaltyMs: data.totalPenaltyMs
     }
   }
 
