@@ -109,12 +109,24 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             });
 
         session.Participant.Email = email;
-        await db.SaveChangesAsync(ct);
+        
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && (sqlEx.Number == 2601 || sqlEx.Number == 2627))
+        {
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "This email address is already registered"
+            });
+        }
 
-        return Ok(new SubmitEmailResultDto 
-        { 
-            Success = true, 
-            Message = "Email successfully registered for job opportunities" 
+        return Ok(new SubmitEmailResultDto
+        {
+            Success = true,
+            Message = "Email successfully registered for job opportunities"
         });
     }
 
