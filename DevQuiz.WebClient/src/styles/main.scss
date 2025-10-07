@@ -1,5 +1,19 @@
 @use 'tailwindcss' as *;
 
+@layer base {
+  @font-face {
+    font-family: 'Gugi';
+    src: url('../assets/fonts/Gugi-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  html, body {
+    font-family: 'Gugi', cursive;
+  }
+}
+
 @layer components {
   .bg-primary {
     background-color: #201d27;
@@ -8,6 +22,6 @@
 
   .bg-secondary {
     background-color: #312c3d;
-    color: #f9fafb;
+    color: #ffffff;
   }
 }
