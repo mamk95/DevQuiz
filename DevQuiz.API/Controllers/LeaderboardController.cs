@@ -73,27 +73,27 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
         if (result == null)
             return NotFound();
 
-        // Calculate position and total participants with a single efficient query using joins
-        var completedScores = await db.Scores
+        var position = await db.Scores
             .Join(
                 db.Sessions,
                 score => score.SessionId,
                 session => session.Id,
                 (score, session) => new { score, session })
-            .Where(x => x.session.CompletedAtUtc != null)
-            .Select(x => x.score.TotalMs)
-            .ToListAsync(ct);
+            .Where(x => x.session.CompletedAtUtc != null && x.score.TotalMs < result.TotalMs)
+            .CountAsync(ct) + 1;
 
-        var position = completedScores.Count(ms => ms < result.TotalMs) + 1;
-        var totalParticipants = completedScores.Count;
+        var totalParticipants = await db.Sessions
+            .Where(s => s.CompletedAtUtc != null)
+            .CountAsync(ct);
 
-        var response = new
+        var response = new LeaderboardMyScoreDto
+
         {
-            name = result.Name,
-            totalMs = result.TotalMs,
-            position,
-            totalParticipants,
-            completedAt = result.CompletedAt
+            Name = result.Name,
+            TotalMs = result.TotalMs,
+            Position = position,
+            TotalParticipants = totalParticipants,
+            CompletedAtUtc = result.CompletedAt
         };
 
         return Ok(response);
