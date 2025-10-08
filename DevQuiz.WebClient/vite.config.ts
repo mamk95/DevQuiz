@@ -16,4 +16,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  build: {
+    assetsInlineLimit: (filePath) => {
+      // Never inline SVG files that contain "avatar" or "Avatar" - always treat them as file paths
+      if (filePath.endsWith('.svg') && (filePath.includes('avatar') || filePath.includes('Avatar'))) {
+        return false
+      }
+      // Use default behavior for other files (4KB limit)
+      return true
+    },
+  },
 })
