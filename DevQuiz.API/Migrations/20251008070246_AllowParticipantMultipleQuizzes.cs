@@ -14,10 +14,6 @@ namespace DevQuiz.API.Migrations
                 name: "IX_Sessions_ParticipantId",
                 table: "Sessions");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Participants_Phone",
-                table: "Participants");
-
             migrationBuilder.DropColumn(
                 name: "Difficulty",
                 table: "Sessions");
@@ -81,11 +77,6 @@ namespace DevQuiz.API.Migrations
                 table: "Sessions",
                 column: "ParticipantId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Participants_Phone",
-                table: "Participants",
-                column: "Phone",
-                unique: true);
         }
     }
 }

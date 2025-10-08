@@ -47,6 +47,9 @@ namespace DevQuiz.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Phone")
+                        .IsUnique();
+
                     b.ToTable("Participants");
                 });
 
