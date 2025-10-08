@@ -43,6 +43,22 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             });
         }
 
+        
+
+        var hasQuestions = await db.QuizQuestions
+            .AnyAsync(qq => qq.QuizId == session.QuizId, ct);
+
+        if (!hasQuestions)
+        {
+            return BadRequest(new CurrentQuestionDto
+            {
+                Done = true,
+                TotalMs = 0,
+                SessionStartedAtUtc = session.StartedAtUtc,
+                
+            });
+        }
+        
         var quizQuestion = await db.QuizQuestions
             .Include(qq => qq.Question)
             .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1)
@@ -132,6 +148,20 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 await transaction.RollbackAsync(ct);
                 return BadRequest(new AnswerResultDto { Correct = false });
+            }
+
+            var hasQuestions = await db.QuizQuestions
+            .AnyAsync(qq => qq.QuizId == session.QuizId, ct);
+
+            if (!hasQuestions)
+            {
+                return BadRequest(new CurrentQuestionDto
+                {
+                    Done = true,
+                    TotalMs = 0,
+                    SessionStartedAtUtc = session.StartedAtUtc,
+                    
+                });
             }
 
             var quizQuestion = await db.QuizQuestions
