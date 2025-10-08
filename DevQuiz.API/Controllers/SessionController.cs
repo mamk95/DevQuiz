@@ -89,13 +89,6 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 Success = false, 
                 Message = "Email is not valid" 
             });
-        
-        if (string.IsNullOrWhiteSpace(email))
-            return BadRequest(new SubmitEmailResultDto
-            {
-                Success = false,
-                Message = "Email is required"
-            });
 
         var session = await db.Sessions
             .Include(s => s.Participant)
@@ -108,13 +101,11 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 Message = "Session not found" 
             });
 
-        session.Participant.Email = email;
-        
-        try
-        {
-            await db.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && (sqlEx.Number == 2601 || sqlEx.Number == 2627))
+
+        var emailExists = await db.Participants
+            .AnyAsync(p => p.Email == email, ct);
+
+        if (emailExists)
         {
             return BadRequest(new SubmitEmailResultDto
             {
@@ -122,6 +113,9 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 Message = "This email address is already registered"
             });
         }
+
+        session.Participant.Email = email;
+        await db.SaveChangesAsync(ct);
 
         return Ok(new SubmitEmailResultDto
         {
