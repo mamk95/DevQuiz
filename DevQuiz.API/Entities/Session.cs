@@ -16,13 +16,15 @@ public class Session
     public DateTime StartedAtUtc { get; set; }
     
     [Required]
-    [StringLength(16)]
-    public required string Difficulty { get; set; }
+    public int QuizId { get; set; }
 
     public DateTime? CompletedAtUtc { get; set; }
 
     [ForeignKey(nameof(ParticipantId))]
     public Participant? Participant { get; set; }
+
+    [ForeignKey(nameof(QuizId))]
+    public Quiz? Quiz { get; set; }
 
     public ICollection<Progress> Progresses { get; set; } = [];
 
