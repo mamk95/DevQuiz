@@ -15,7 +15,9 @@ withDefaults(
     message?: string
   }>(),
   {
-    message: 'Loading question...',
-  },
+    message: 'Loading question...'
+  }
 )
 </script>
+
+<style scoped lang="scss"></style>
