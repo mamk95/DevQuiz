@@ -23,7 +23,7 @@ export default defineConfig({
         return false
       }
       // Use default behavior for other files (4KB limit)
-      return true
+      return undefined
     },
   },
 })
