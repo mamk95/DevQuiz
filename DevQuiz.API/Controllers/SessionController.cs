@@ -159,10 +159,71 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         });
     }
 
+    [HttpPost("submit-email")]
+    [ProducesResponseType(typeof(SubmitEmailResultDto), 200)]
+    [ProducesResponseType(typeof(SubmitEmailResultDto), 400)]
+    public async Task<ActionResult<SubmitEmailResultDto>> SubmitEmail([FromBody] SubmitEmailDto dto, CancellationToken ct)
+    {
+        var email = dto.Email?.Trim() ?? string.Empty;
+        if (!IsValidEmail(email))
+            return BadRequest(new SubmitEmailResultDto 
+            { 
+                Success = false, 
+                Message = "Email is not valid" 
+            });
+
+        var session = await db.Sessions
+            .Include(s => s.Participant)
+            .FirstOrDefaultAsync(s => s.Id.ToString() == Request.Cookies["QuizSession"], ct);
+
+        if (session?.Participant == null)
+            return BadRequest(new SubmitEmailResultDto 
+            { 
+                Success = false, 
+                Message = "Session not found" 
+            });
+
+
+        var emailExists = await db.Participants
+            .AnyAsync(p => p.Email == email, ct);
+
+        if (emailExists)
+        {
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "This email address is already registered"
+            });
+        }
+
+        session.Participant.Email = email;
+        await db.SaveChangesAsync(ct);
+
+        return Ok(new SubmitEmailResultDto
+        {
+            Success = true,
+            Message = "Email successfully registered for job opportunities"
+        });
+    }
+
     private static bool IsValidPhone(string phone)
     {
         if (string.IsNullOrEmpty(phone)) return false;
         return PhoneRegex().IsMatch(phone);
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email)) return false;
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static string NormalizePhone(string phone)
