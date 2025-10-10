@@ -8,7 +8,7 @@ export const useSessionStore = defineStore('session', () => {
   const avatar = ref('')
   const hasSession = ref(false)
   const currentQuestionIndex = ref(0)
-  const totalQuestions = ref(5)
+  const totalQuestions = ref(0) // Will be set from API response
   const totalTimeMs = ref<number | null>(null)
 
   const isAuthenticated = computed(() => hasSession.value)
@@ -24,6 +24,10 @@ export const useSessionStore = defineStore('session', () => {
         hasSession.value = true
         currentQuestionIndex.value = 0
         totalTimeMs.value = null
+        
+        if (typeof result.totalQuestions === 'number') {
+          totalQuestions.value = result.totalQuestions
+        }
       } else {
         hasSession.value = false
         throw new Error(result.message || 'Failed to start session')
