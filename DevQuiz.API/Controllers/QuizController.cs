@@ -43,14 +43,22 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             });
         }
 
-        // Get the quiz for the session's difficulty
-        var quiz = await db.Quizzes.FirstOrDefaultAsync(q => q.Difficulty == session.Difficulty, ct);
-        if (quiz == null)
-            return Unauthorized();
+        var hasQuestions = await db.QuizQuestions
+            .AnyAsync(qq => qq.QuizId == session.QuizId, ct);
 
+        if (!hasQuestions)
+        {
+            return BadRequest(new CurrentQuestionDto
+            {
+                Done = true,
+                TotalMs = 0,
+                SessionStartedAtUtc = session.StartedAtUtc,
+            });
+        }
+        
         var quizQuestion = await db.QuizQuestions
             .Include(qq => qq.Question)
-            .Where(qq => qq.QuizId == quiz.Id && qq.Sequence == session.CurrentQuestionIndex + 1)
+            .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1)
             .FirstOrDefaultAsync(ct);
 
         var currentQuestion = quizQuestion?.Question;
@@ -139,17 +147,23 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new AnswerResultDto { Correct = false });
             }
 
-            // Get the quiz for the session's difficulty
-            var quiz = await db.Quizzes.FirstOrDefaultAsync(q => q.Difficulty == session.Difficulty, ct);
-            if (quiz == null)
+            var hasQuestions = await db.QuizQuestions
+            .AnyAsync(qq => qq.QuizId == session.QuizId, ct);
+
+            if (!hasQuestions)
             {
-                await transaction.RollbackAsync(ct);
-                return BadRequest(new AnswerResultDto { Correct = false });
+                return BadRequest(new CurrentQuestionDto
+                {
+                    Done = true,
+                    TotalMs = 0,
+                    SessionStartedAtUtc = session.StartedAtUtc,
+                    
+                });
             }
 
             var quizQuestion = await db.QuizQuestions
                 .Include(qq => qq.Question)
-                .Where(qq => qq.QuizId == quiz.Id && qq.Sequence == session.CurrentQuestionIndex + 1)
+                .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1)
                 .FirstOrDefaultAsync(ct);
 
             var currentQuestion = quizQuestion?.Question;
@@ -176,7 +190,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             if (progress.IsCorrect)
             {
                 await transaction.RollbackAsync(ct);
-                var wasLastQuestion = !await db.QuizQuestions.AnyAsync(qq => qq.QuizId == quiz.Id && qq.Sequence == session.CurrentQuestionIndex + 2, ct);
+                var wasLastQuestion = !await db.QuizQuestions.AnyAsync(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 2, ct);
 
                 if (wasLastQuestion)
                 {
@@ -223,7 +237,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             session.CurrentQuestionIndex++;
 
             var nextQuestion = await db.QuizQuestions
-                .AnyAsync(qq => qq.QuizId == quiz.Id && qq.Sequence == session.CurrentQuestionIndex + 1, ct);
+                .AnyAsync(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1, ct);
 
             if (!nextQuestion)
             {
