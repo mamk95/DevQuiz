@@ -18,7 +18,9 @@
       ]"
     >
       <div class="flex items-center">
-        <span class="flex-1">{{ choice }}</span>
+        <div class="flex-1">
+          <TextFormatter :text="choice" />
+        </div>
         <span
           v-if="showResult && lastAnswer === choice && !wasCorrect"
           class="text-red-600 ml-2"
@@ -37,6 +39,8 @@
 </template>
 
 <script setup lang="ts">
+import TextFormatter from '@/components/TextFormatter.vue'
+
 defineProps<{
   choices?: string[]
   disabled: boolean

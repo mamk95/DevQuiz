@@ -25,7 +25,9 @@
 
         <!-- Question Content -->
         <div class="p-6">
-          <h2 class="text-xl font-semibold mb-6 text-gray-800">{{ currentQuestion.prompt }}</h2>
+          <div class="text-xl font-semibold mb-6 text-gray-800">
+            <TextFormatter :text="currentQuestion.prompt" />
+          </div>
 
           <!-- Multiple Choice -->
           <MultipleChoiceQuestion
@@ -75,6 +77,7 @@ import QuizLoading from '@/components/quiz/QuizLoading.vue'
 import MultipleChoiceQuestion from '@/components/quiz/MultipleChoiceQuestion.vue'
 import CodeFixQuestion from '@/components/quiz/CodeFixQuestion.vue'
 import PenaltyMessage from '@/components/quiz/PenaltyMessage.vue'
+import TextFormatter from '@/components/TextFormatter.vue'
 
 const router = useRouter()
 const sessionStore = useSessionStore()
