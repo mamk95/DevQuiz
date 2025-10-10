@@ -38,6 +38,11 @@ export const useSessionStore = defineStore('session', () => {
     try {
       const result = await api.resumeSession()
 
+      if(!result) {
+        hasSession.value = false
+        return null
+      }
+      
       if (result.finished === true) {
         clearSession()
         return result

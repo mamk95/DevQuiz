@@ -87,7 +87,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         {
 
             InvalidateSessionCookie();
-            return Unauthorized();
+            return NoContent();
         }
 
         var sessionsQuery = db.Sessions.Include(s => s.Participant).Include(s => s.Progresses);

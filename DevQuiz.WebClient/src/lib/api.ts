@@ -130,7 +130,7 @@ class ApiClient {
     }
   }
 
-  async resumeSession(): Promise<ResumeSessionResponse> {
+  async resumeSession(): Promise<ResumeSessionResponse | null> {
     const response = await fetch(`${this.baseUrl}/session/resume`, {
       method: 'GET',
       credentials: 'include',
@@ -138,6 +138,11 @@ class ApiClient {
         'Content-Type': 'application/json',
       },
     })
+
+    // 204 No Content means no session exists
+    if (response.status === 204) {
+      return null
+    }
 
     const data = await this.handleResponse<ResumeSessionResponse>(response)
 
