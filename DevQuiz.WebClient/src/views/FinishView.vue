@@ -5,7 +5,7 @@
 
       <h1 class="text-3xl font-bold mb-4">Quiz Completed!</h1>
 
-      <div class="rounded-lg p-6 mb-6 bg-gray-10 text-white">
+      <div class="rounded-lg p-6 mb-6 bg-gray-100 text-gray-900">
         <p class="text-sm mb-2">Your Total Time</p>
         <p class="text-4xl font-bold">{{ formattedTime }}</p>
       </div>
