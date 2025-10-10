@@ -38,7 +38,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         if (existingParticipant != null)
         {
             var hasCompletedThisQuiz = existingParticipant.Sessions
-                .Any(s => s.QuizId == quiz.Id);
+                .Any(s => s.QuizId == quiz.Id && s.CompletedAtUtc != null);
 
             if (hasCompletedThisQuiz)
             {

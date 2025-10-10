@@ -43,8 +43,6 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             });
         }
 
-        
-
         var hasQuestions = await db.QuizQuestions
             .AnyAsync(qq => qq.QuizId == session.QuizId, ct);
 
@@ -55,7 +53,6 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 Done = true,
                 TotalMs = 0,
                 SessionStartedAtUtc = session.StartedAtUtc,
-                
             });
         }
         
