@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/[controller]")]
 public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : ControllerBase
 {
-    private const int WrongAnswerPenaltyMs = 1000; // milliseconds
+    private const int WrongAnswerPenaltyMs = 10000; // milliseconds
 
     [HttpGet("current")]
     [ProducesResponseType(typeof(CurrentQuestionDto), 200)]
@@ -181,6 +181,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 if (wasLastQuestion)
                 {
                     var totalMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
+
                     return Ok(new AnswerResultDto
                     {
                         Correct = true,
@@ -247,6 +248,14 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
 
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
+
+                // Delete session cookie since quiz is completed
+                Response.Cookies.Delete("QuizSession", new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                });
 
                 return Ok(new AnswerResultDto
                 {

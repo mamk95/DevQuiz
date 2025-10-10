@@ -154,6 +154,20 @@ const isCustomCode = ref(false)
 const customCountryCode = ref('')
 const loading = ref(false)
 const error = ref('')
+const checkingSession = ref(true)
+
+// Try to resume existing session on mount
+onMounted(async () => {
+  try {
+    await sessionStore.resumeSession()
+    if (sessionStore.hasSession) {
+      router.push('/quiz')
+      return
+    }
+  } finally {
+    checkingSession.value = false
+  }
+})
 const difficulty = ref('noob')
 
 // Find if current code is in common list
@@ -257,3 +271,4 @@ const handleJoin = async () => {
 </script>
 
 <style scoped lang="scss"></style>
+
