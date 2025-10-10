@@ -18,7 +18,7 @@
           @input="handleInput"
           required
           rows="6"
-          class="w-full px-4 py-3 bg-gray-50 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+          class="w-full px-4 py-3 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
           :placeholder="placeholder || 'Enter your code here...'"
           :disabled="disabled"
           spellcheck="false"
@@ -31,11 +31,7 @@
       v-if="testCode"
       class="border-2 rounded-lg overflow-hidden"
       :class="
-        testResult === null
-          ? 'border-gray-200'
-          : testResult
-            ? 'border-green-500'
-            : 'border-red-500'
+        testResult === null ? 'border-gray-200' : testResult ? 'border-green-500' : 'border-red-500'
       "
     >
       <div
@@ -73,12 +69,7 @@
               clip-rule="evenodd"
             />
           </svg>
-          <svg
-            v-else
-            class="w-4 h-4 mr-2 text-red-600"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
+          <svg v-else class="w-4 h-4 mr-2 text-red-600" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -128,5 +119,3 @@ const handleInput = (event: Event) => {
   emit('update:testResult', null)
 }
 </script>
-
-<style scoped lang="scss"></style>

@@ -18,5 +18,3 @@ defineProps<{
   message: string
 }>()
 </script>
-
-<style scoped lang="scss"></style>
