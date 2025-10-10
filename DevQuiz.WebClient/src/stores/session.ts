@@ -25,7 +25,7 @@ export const useSessionStore = defineStore('session', () => {
         currentQuestionIndex.value = 0
         totalTimeMs.value = null
         
-        if (result.totalQuestions) {
+        if (typeof result.totalQuestions === 'number') {
           totalQuestions.value = result.totalQuestions
         }
       } else {
