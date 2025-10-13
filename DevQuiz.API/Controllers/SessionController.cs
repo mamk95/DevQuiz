@@ -82,7 +82,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
     [ProducesResponseType(typeof(SubmitEmailResultDto), 400)]
     public async Task<ActionResult<SubmitEmailResultDto>> SubmitEmail([FromBody] SubmitEmailDto dto, CancellationToken ct)
     {
-        var email = dto.Email?.Trim() ?? string.Empty;
+        var email = dto.Email?.Trim().ToLowerInvariant() ?? string.Empty;
         if (!IsValidEmail(email))
             return BadRequest(new SubmitEmailResultDto 
             { 
@@ -101,9 +101,25 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 Message = "Session not found" 
             });
 
+        // Check if quiz is completed
+        if (session.CompletedAtUtc == null)
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "Quiz must be completed before submitting email"
+            });
 
+        // Check if participant already has an email
+        if (!string.IsNullOrEmpty(session.Participant.Email))
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "Email already submitted for this session"
+            });
+
+        // Check for duplicate email (case-insensitive)
         var emailExists = await db.Participants
-            .AnyAsync(p => p.Email == email, ct);
+            .AnyAsync(p => p.Email != null && p.Email.ToLower() == email, ct);
 
         if (emailExists)
         {
