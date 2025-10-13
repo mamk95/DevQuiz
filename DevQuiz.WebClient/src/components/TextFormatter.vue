@@ -7,7 +7,12 @@
         :language="block.language"
         class="mb-4"
       />
-      <p v-else-if="block.type === 'text'" class="mb-4" v-html="formatInlineCode(block.content)"></p>
+      <p v-else-if="block.type === 'text'" class="mb-4">
+        <template v-for="(segment, idx) in parseInlineCode(block.content)" :key="idx">
+          <code v-if="segment.isCode" class="inline-code">{{ segment.text }}</code>
+          <span v-else>{{ segment.text }}</span>
+        </template>
+      </p>
     </div>
   </div>
 </template>
@@ -71,8 +76,25 @@ const parsedBlocks = computed(() => {
   return blocks
 })
 
-const formatInlineCode = (text: string) => {
-  return text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+const parseInlineCode = (text: string) => {
+  const segments = []
+  const regex = /`([^`]+)`/g
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, match.index), isCode: false })
+    }
+    segments.push({ text: match[1], isCode: true })
+    lastIndex = regex.lastIndex
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex), isCode: false })
+  }
+
+  return segments
 }
 </script>
 
