@@ -35,10 +35,10 @@
 
         <button
           @click="submitContact"
-          :disabled="isSubmitting || !isValidEmail"
+          :disabled="isSubmitting || !isValidEmail || submitSuccess"
           class="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+          {{ submitSuccess ? 'Submitted!' : isSubmitting ? 'Submitting...' : 'Submit' }}
         </button>
 
         <p v-if="submitSuccess" class="text-sm text-green-600 text-center">
@@ -85,9 +85,13 @@ const submitContact = async () => {
   isSubmitting.value = true
   
   try {
-    const response = await api.submitEmail(email.value)
+    // Normalize email to lowercase
+    const normalizedEmail = email.value.trim().toLowerCase()
+    const response = await api.submitEmail(normalizedEmail)
     if (response.success) {
         submitSuccess.value = true
+        // Prevent further submissions
+        email.value = normalizedEmail
     } else {
         throw new Error(response.message || 'Submission failed')
     }
