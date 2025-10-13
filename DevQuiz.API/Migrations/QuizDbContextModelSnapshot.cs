@@ -51,6 +51,10 @@ namespace DevQuiz.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasFilter("[Email] IS NOT NULL");
+
                     b.HasIndex("Phone")
                         .IsUnique();
 

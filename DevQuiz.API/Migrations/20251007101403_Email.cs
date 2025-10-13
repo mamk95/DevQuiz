@@ -21,7 +21,8 @@ namespace DevQuiz.API.Migrations
                 name: "IX_Participants_Email",
                 table: "Participants",
                 column: "Email",
-                unique: true);
+                unique: true,
+                filter: "[Email] IS NOT NULL");
         }
 
         /// <inheritdoc />
