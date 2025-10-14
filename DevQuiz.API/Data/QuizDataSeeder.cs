@@ -12,31 +12,18 @@ public static class QuizDataSeeder
 
         var questions = new List<Question>
         {
-            // NOOB QUESTIONS (first 7)
-            new()
-            {
-                Type = QuestionType.MultipleChoice,
-                Prompt = "Which change makes the assertion pass? \n\n```python\ndef sum_two_numbers(a, b):\n    return a - b\n\nassert sum_two_numbers(2, 3) == 5\n```",
-                CorrectAnswer = "return a + b",
-                ChoicesJson = JsonSerializer.Serialize(new List<string>
-                {
-                    "return a * b",
-                    "return a + b",
-                    "return abs(a - b)",
-                    "return max(a, b)",
-                }),
-            },
+            // NOOB QUESTIONS (first 6)
             new()
             {
                 Type = QuestionType.MultipleChoice,
                 Prompt = "What's the main goal of UX design?",
-                CorrectAnswer = "Help users achieve their goals easily",
+                CorrectAnswer = "Better user experience",
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
-                    "Make the interface look cool",
-                    "Help users achieve their goals easily",
-                    "Add as many options as possible",
-                    "Reduce server load",
+                    "More complex interface",
+                    "Better user experience",
+                    "Confusing navigation",
+                    "Increased server load",
                 }),
             },
             new()
@@ -47,32 +34,21 @@ public static class QuizDataSeeder
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
                     "Talking to a duck to find bugs in your code",
-                    "Encrypting code with duck-themed algorithms",
+                    "Encrypting with duck-themed algorithms",
                     "Using a duck-shaped USB for secure storage",
                     "Debugging code underwater",
                 }),
             },
             new()
             {
-                Type = QuestionType.CodeFix,
-                Prompt = "Fix the string so the check passes.",
-                CorrectAnswer = "const text = \"hello world\";",
-                ChoicesJson = JsonSerializer.Serialize(new Dictionary<string, string>
-                {
-                    ["initialCode"] = "const text = \"hello wrld\";",
-                    ["testCode"] = "assert(text === \"hello world\");",
-                }),
-            },
-            new()
-            {
                 Type = QuestionType.MultipleChoice,
-                Prompt = "What's the most important thing to consider when designing an app for users with visual impairments?",
-                CorrectAnswer = "Ensuring high contrast and screen reader compatibility",
+                Prompt = "How can you design an app for users with visual impairments?",
+                CorrectAnswer = "Using high contrast and colour-blind friendly colours",
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
                     "Using bright colors and animations",
-                    "Making the app look trendy and modern",
-                    "Ensuring high contrast and screen reader compatibility",
+                    "Using complex navigation",
+                    "Using high contrast and colour-blind friendly colours",
                     "Adding lots of small text and icons",
                 }),
             },
@@ -84,9 +60,22 @@ public static class QuizDataSeeder
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
                     "To speed up login",
-                    "To allow multiple users to share an account",
-                    "To add an extra layer of security",
                     "To reset your password",
+                    "To add an extra layer of security",
+                    "Nothing, it's just a buzzword",
+                }),
+            },
+            new()
+            {
+                Type = QuestionType.MultipleChoice,
+                Prompt = "Who is known for being the first computer programmer?",
+                CorrectAnswer = "Ada Lovelace",
+                ChoicesJson = JsonSerializer.Serialize(new List<string>
+                {
+                    "Ada Lovelace",
+                    "Mark Zuckerberg",
+                    "Alan Turing",
+                    "Marie Curie",
                 }),
             },
             new()
@@ -105,91 +94,91 @@ public static class QuizDataSeeder
             // NERD QUESTIONS (remaining 8)
             new()
             {
-                Type = QuestionType.CodeFix,
-                Prompt = "Make both assertions pass:",
-                CorrectAnswer = "def is_even(n):\n    return n % 2 == 0",
-                ChoicesJson = JsonSerializer.Serialize(new Dictionary<string, string>
+                Type = QuestionType.MultipleChoice,
+                Prompt = "What is the output of unknown_func(2,3)?\n\n```python\ndef unknown_func(a, b):\n    return a + b\n```",
+                CorrectAnswer = "5",
+                ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
-                    ["initialCode"] = "def is_even(n):\n    return n % 2 == 1",
-                    ["testCode"] = "assert is_even(4) is True and is_even(5) is False",
+                    "2",
+                    "5",
+                    "-1",
+                    "6",
                 }),
             },
             new()
             {
                 Type = QuestionType.MultipleChoice,
-                Prompt = "Which of the following is NOT a common penetration testing tool?",
-                CorrectAnswer = "NeedleWork",
+                Prompt = "Which of the following is a common penetration testing tool?",
+                CorrectAnswer = "Wireshark",
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
-                    "Metasploit",
-                    "NeedleWork",
-                    "Nmap",
+                    "Pyjamashark",
+                    "GreatWhiteShark",
+                    "Babyshark",
                     "Wireshark",
                 }),
             },
             new()
             {
-                Type = QuestionType.MultipleChoice,
-                Prompt = "Based on this code:\n\n```typescript\ntype Shape =\n  | { kind: \"circle\"; r: number }\n  | { kind: \"square\"; s: number };\n\nfunction area(shape: Shape) {\n  if (shape.kind === \"circle\") {\n    return Math.PI * shape.r * shape.r;\n  } else {\n    return shape.s * shape.s;\n  }\n}\n```\n\nWhich statement is correct?",
-                CorrectAnswer = "Checking shape.kind narrows the type appropriately",
-                ChoicesJson = JsonSerializer.Serialize(new List<string>
+                Type = QuestionType.CodeFix,
+                Prompt = "Fix the string so the check passes.",
+                CorrectAnswer = "const text = \"hello world\";",
+                ChoicesJson = JsonSerializer.Serialize(new Dictionary<string, string>
                 {
-                    "You can access shape.r without checks",
-                    "A type assertion is required to access shape.r",
-                    "Checking shape.kind narrows the type appropriately",
-                    "TypeScript cannot discriminate unions like this",
+                    ["initialCode"] = "const text = \"hello\";",
+                    ["testCode"] = "assert(text === \"hello world\");",
                 }),
             },
             new()
             {
                 Type = QuestionType.MultipleChoice,
-                Prompt = "Which of the following is NOT an example of universal design in digital products?",
-                CorrectAnswer = "Using red and green color coding to differentiate between buttons",
+                Prompt = "What is cloud storage?",
+                CorrectAnswer = "A method to save files on the internet",
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
-                    "Providing text alternatives for images (alt text)",
-                    "Ensuring keyboard navigation works throughout the site",
-                    "Using high contrast between text and background",
-                    "Using red and green color coding to differentiate between buttons",
+                    "A type of weather forecast",
+                    "A storage option on a satellite",
+                    "A method to save files on the internet",
+                    "A program for saving files locally on a computer",
                 }),
             },
             new()
             {
                 Type = QuestionType.MultipleChoice,
-                Prompt = "What is printed?\n\n```java\nimport java.util.stream.*;\npublic class Main {\n  public static void main(String[] args) {\n    int s = IntStream.rangeClosed(1, 5)\n      .filter(n -> n % 2 == 0)\n      .sum();\n    System.out.println(s);\n  }\n}\n```",
-                CorrectAnswer = "6",
+                Prompt = "What is the value of a?\n\n```python\na = 6 % 2\n```",
+                CorrectAnswer = "0",
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
-                    "4",
-                    "6",
-                    "8",
-                    "12",
+                    "0",
+                    "1",
+                    "2",
+                    "-100",
                 }),
             },
             new()
             {
                 Type = QuestionType.MultipleChoice,
-                Prompt = "A website displays the following URL when viewing a user profile:\n\n```url\nhttp://example.com/profile?id=123\n```\n\nIf the application does not validate input, which of the following could be an example of a basic exploit attempt?",
-                CorrectAnswer = "http://example.com/profile?id=123 OR 1=1",
+                Prompt = "Which of these is an example of SQL injection?",
+                CorrectAnswer = "http://x.com/?id=123'OR 1=1",
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
-                    "http://example.com/profile?id=abc",
-                    "http://example.com/profile?id=123 OR 1=1",
-                    "http://example.com/profile?id=999",
-                    "http://example.com/profile?id=123&theme=dark",
+                    "http://x.com/?id=abc",
+                    "http://x.com/?id=123'OR 1=1",
+                    "http://x.com/?id=999",
+                    "http://x.com/?id=123&theme=dark",
                 }),
             },
             new()
             {
                 Type = QuestionType.MultipleChoice,
-                Prompt = "Which is a compile-time error for ReadonlyArray?\n\n```typescript\nconst a: ReadonlyArray<number> = [1, 2, 3];\n```",
-                CorrectAnswer = "a.push(4)",
+                Prompt = "Which of the following operations will result in an error?\n\n```typescript\nconst a: ReadonlyArray<number> = [1];\n```",
+                CorrectAnswer = "a[0] = 2",
                 ChoicesJson = JsonSerializer.Serialize(new List<string>
                 {
-                    "a.slice(1)",
+                    "var b = a",
                     "a.map(x => x)",
-                    "a.push(4)",
-                    "a[0]",
+                    "a[0] = 2",
+                    "var c = a[0]",
                 }),
             },
             new()
@@ -205,6 +194,7 @@ public static class QuizDataSeeder
                     "Baldness",
                 }),
             },
+
         };
 
         db.Questions.AddRange(questions);
@@ -216,11 +206,11 @@ public static class QuizDataSeeder
         db.Quizzes.AddRange(quizNoob, quizNerd);
         await db.SaveChangesAsync();
 
-        // Link first 7 questions to Noob, remaining 8 to Nerd
+        // Link first 6 questions to Noob, remaining 8 to Nerd
         var quizQuestions = new List<QuizQuestion>();
         for (int i = 0; i < questions.Count; i++)
         {
-            if (i < 7)
+            if (i < 6)
             {
                 quizQuestions.Add(new QuizQuestion
                 {
@@ -235,7 +225,7 @@ public static class QuizDataSeeder
                 {
                     QuizId = quizNerd.Id,
                     QuestionId = questions[i].Id,
-                    Sequence = (i - 7) + 1
+                    Sequence = (i - 6) + 1
                 });
             }
         }
