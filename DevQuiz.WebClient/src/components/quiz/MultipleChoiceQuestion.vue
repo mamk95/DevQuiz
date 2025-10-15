@@ -18,8 +18,13 @@
       ]"
     >
       <div class="flex items-center">
-        <span class="flex-1">{{ choice }}</span>
-        <span v-if="showResult && lastAnswer === choice && !wasCorrect" class="text-red-600 ml-2">
+        <div class="flex-1">
+          <TextFormatter :text="choice" />
+        </div>
+        <span
+          v-if="showResult && lastAnswer === choice && !wasCorrect"
+          class="text-red-600 ml-2"
+        >
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
@@ -34,6 +39,8 @@
 </template>
 
 <script setup lang="ts">
+import TextFormatter from '@/components/TextFormatter.vue'
+
 defineProps<{
   choices?: string[]
   disabled: boolean

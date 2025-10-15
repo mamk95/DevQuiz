@@ -14,7 +14,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
 
     [HttpPost("start")]
     [ProducesResponseType(typeof(SessionStartedDto), 200)]
-    [ProducesResponseType(typeof(SessionStartedDto), 400)]
+    [ProducesResponseType(typeof(SessionStartedDto), 401)]
     public async Task<ActionResult<SessionStartedDto>> Start([FromBody] StartSessionDto dto, CancellationToken ct)
     {
         var name = dto.Name?.Trim() ?? string.Empty;
@@ -48,11 +48,21 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             CreatedAtUtc = DateTime.UtcNow,
         };
 
-        // Select quiz by difficulty
-        var quizExists = await db.Quizzes.AnyAsync(q => q.Difficulty == dto.Difficulty, ct);
-        if (!quizExists)
+        var quizId = await db.Quizzes
+            .Where(q => q.Difficulty == dto.Difficulty)
+            .Select(q => q.Id)
+            .FirstOrDefaultAsync(ct);
+            
+        if (quizId == 0)
             return BadRequest(new SessionStartedDto { Success = false, Message = "No quiz found for selected difficulty" });
 
+        var totalQuestions = await db.QuizQuestions
+            .Where(qq => qq.QuizId == quizId)
+            .CountAsync(ct);
+            
+        if (totalQuestions == 0)
+            return BadRequest(new SessionStartedDto { Success = false, Message = "Quiz has no questions configured" });
+            
         var session = new Session
         {
             Id = Guid.NewGuid(),
@@ -74,7 +84,79 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
         });
 
-        return Ok(new SessionStartedDto { Success = true });
+        return Ok(new SessionStartedDto { Success = true, TotalQuestions = totalQuestions });
+    }
+
+    [HttpGet("resume")]
+    [ProducesResponseType(typeof(ResumeSessionDto), 200)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<ResumeSessionDto>> GetProgress(CancellationToken ct)
+    {
+        var sessionId = GetSessionIdFromCookie();
+        if (sessionId == null)
+        {
+
+            InvalidateSessionCookie();
+            return NoContent();
+        }
+
+        var sessionsQuery = db.Sessions.Include(s => s.Participant).Include(s => s.Progresses);
+        var session = await sessionsQuery.FirstOrDefaultAsync(s => s.Id == sessionId.Value, ct);
+
+        if (session == null || session.Participant == null)
+        {
+
+            InvalidateSessionCookie();
+            return Unauthorized();
+        }
+
+        if (session.CompletedAtUtc != null)
+        {
+            InvalidateSessionCookie();
+            return Unauthorized();
+        }
+
+        var totalQuestions = await db.Questions.CountAsync(ct);
+        var answeredQuestions = session.Progresses.Count(p => p.IsCorrect);
+
+        var totalTimeMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
+
+        var response = new ResumeSessionDto
+        {
+            QuestionIndex = session.CurrentQuestionIndex,
+            Finished = answeredQuestions >= totalQuestions,
+            ParticipantName = session.Participant.Name,
+            ParticipantPhone = session.Participant.Phone,
+            TotalTimeMs = totalTimeMs,
+            Success = true,
+        };
+
+        if (answeredQuestions >= totalQuestions)
+        {
+            InvalidateSessionCookie();
+        }
+
+        return Ok(response);
+    }
+
+    private Guid? GetSessionIdFromCookie()
+    {
+        if (Request.Cookies.TryGetValue("QuizSession", out var sessionIdStr) &&
+            Guid.TryParse(sessionIdStr, out var sessionId))
+        {
+            return sessionId;
+        }
+        return null;
+    }
+
+    private void InvalidateSessionCookie()
+    {
+        Response.Cookies.Delete("QuizSession", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+        });
     }
 
     private static bool IsValidPhone(string phone)

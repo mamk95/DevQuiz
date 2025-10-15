@@ -84,7 +84,7 @@ onUnmounted(() => {
 
 const formatTime = (ms: number) => {
   const seconds = ms / 1000
-  return `${seconds.toFixed(3)}s`
+  return `${seconds.toFixed(1)}s`
 }
 
 const loadLeaderboard = async () => {
