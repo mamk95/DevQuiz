@@ -1,7 +1,7 @@
 <template>
   <div class="text-white w-[95%] mx-auto">
     <!-- Duck progress row -->
-    <div class="flex justify-between items-center py-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 gap-3 sm:gap-0">
       <div class="flex items-center gap-2">
         <svg
           v-for="duck in totalQuestions"
@@ -25,7 +25,7 @@
         </span>
       </div>
 
-      <span class="text-xs bg-white/20 px-3 py-1 rounded-full">
+      <span class="text-xs bg-white/20 px-3 py-1 rounded-full whitespace-nowrap">
         {{ questionType === 'CodeFix' ? 'Code Fix' : 'Multiple Choice' }}
       </span>
     </div>
