@@ -1,5 +1,5 @@
 <template>
-  <div class="KioskView min-h-screen bg-gradient-to-br bg-primary text-white p-8">
+  <div class="KioskView min-h-screen bg-primary text-white p-8">
     <div class="max-w-7xl mx-auto h-full flex gap-8">
       <div class="flex-1">
         <h1 class="text-4xl font-bold mb-8 text-center">Leaderboard</h1>
