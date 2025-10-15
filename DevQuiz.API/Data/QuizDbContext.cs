@@ -23,6 +23,7 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
         modelBuilder.Entity<Participant>(entity =>
         {
             entity.HasIndex(e => e.Phone).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2");
         });
 

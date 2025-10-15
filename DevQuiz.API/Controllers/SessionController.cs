@@ -159,10 +159,107 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         });
     }
 
+    [HttpPost("submit-email")]
+    [ProducesResponseType(typeof(SubmitEmailResultDto), 200)]
+    [ProducesResponseType(typeof(SubmitEmailResultDto), 400)]
+    public async Task<ActionResult<SubmitEmailResultDto>> SubmitEmail([FromBody] SubmitEmailDto dto, CancellationToken ct)
+    {
+        var email = dto.Email?.Trim().ToLowerInvariant();
+        
+        if (!IsValidEmail(email))
+            return BadRequest(new SubmitEmailResultDto 
+            { 
+                Success = false, 
+                Message = "Email is not valid", 
+            });
+
+        if (!Request.Cookies.TryGetValue("QuizSession", out var sessionIdStr) ||
+            !Guid.TryParse(sessionIdStr, out var sessionId))
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "Session not found",
+            });
+
+        var session = await db.Sessions
+            .Include(s => s.Participant)
+            .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+
+        if (session?.Participant == null)
+            return BadRequest(new SubmitEmailResultDto 
+            { 
+                Success = false, 
+                Message = "Session not found",
+            });
+
+        if (session.CompletedAtUtc == null)
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "Quiz must be completed before submitting email",
+            });
+
+        // Check if participant already has an email
+        if (!string.IsNullOrEmpty(session.Participant.Email))
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "Email already submitted for this session",
+            });
+
+        var emailExists = await db.Participants
+            .AnyAsync(p => p.Email == email, ct);
+
+        if (emailExists)
+        {
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "This email address is already registered",
+            });
+        }
+
+        session.Participant.Email = email;
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest(new SubmitEmailResultDto
+            {
+                Success = false,
+                Message = "This email address is already registered",
+            });
+        }
+
+        return Ok(new SubmitEmailResultDto
+        {
+            Success = true,
+            Message = "Email successfully registered for job opportunities",
+        });
+    }
+
     private static bool IsValidPhone(string phone)
     {
         if (string.IsNullOrEmpty(phone)) return false;
         return PhoneRegex().IsMatch(phone);
+    }
+
+    private static bool IsValidEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return false;
+        
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static string NormalizePhone(string phone)
