@@ -122,7 +122,6 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import DifficultySelector from '@/components/quiz/DifficultySelector.vue'
 import { useRouter } from 'vue-router'
-import type { Ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import AvatarSelector from '@/components/AvatarSelector.vue'
 // Common country codes with known validation rules
