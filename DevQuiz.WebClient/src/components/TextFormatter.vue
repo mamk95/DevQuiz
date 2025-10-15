@@ -7,7 +7,7 @@
         :language="block.language"
         class="mb-4"
       />
-      <p v-else-if="block.type === 'text'" class="mb-4">
+      <p v-else-if="block.type === 'text'" class="mb-4 text-white">
         <template v-for="(segment, idx) in parseInlineCode(block.content)" :key="idx">
           <code v-if="segment.isCode" class="inline-code">{{ segment.text }}</code>
           <span v-else>{{ segment.text }}</span>
