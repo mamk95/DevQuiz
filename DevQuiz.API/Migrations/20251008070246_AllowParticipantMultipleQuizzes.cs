@@ -14,16 +14,27 @@ namespace DevQuiz.API.Migrations
                 name: "IX_Sessions_ParticipantId",
                 table: "Sessions");
 
-            migrationBuilder.DropColumn(
-                name: "Difficulty",
-                table: "Sessions");
-
             migrationBuilder.AddColumn<int>(
                 name: "QuizId",
                 table: "Sessions",
                 type: "int",
                 nullable: false,
                 defaultValue: 0);
+
+            // Migrate existing sessions to map to quizzes based on Difficulty
+            migrationBuilder.Sql(@"
+                UPDATE Sessions
+                SET QuizId = (
+                    SELECT TOP 1 Id 
+                    FROM Quizzes 
+                    WHERE Quizzes.Difficulty = Sessions.Difficulty
+                )
+                WHERE QuizId = 0
+            ");
+
+            migrationBuilder.DropColumn(
+                name: "Difficulty",
+                table: "Sessions");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sessions_ParticipantId_QuizId",
