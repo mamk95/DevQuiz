@@ -58,8 +58,19 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 QuizId = quiz.Id,
             };
 
-            db.Sessions.Add(newSession);
-            await db.SaveChangesAsync(ct);
+            try
+            {
+                db.Sessions.Add(newSession);
+                await db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                return Ok(new SessionStartedDto
+                {
+                    Success = false,
+                    Message = "You've already taken this quiz. Thanks!",
+                });
+            }
 
             Response.Cookies.Append("QuizSession", newSession.Id.ToString(), new CookieOptions
             {
@@ -92,7 +103,19 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
 
         db.Participants.Add(participant);
         db.Sessions.Add(session);
-        await db.SaveChangesAsync(ct);
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Ok(new SessionStartedDto
+            {
+                Success = false,
+                Message = "You've already taken this quiz. Thanks!",
+            });
+        }
 
         Response.Cookies.Append("QuizSession", session.Id.ToString(), new CookieOptions
         {
