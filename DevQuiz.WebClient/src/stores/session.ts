@@ -41,7 +41,7 @@ export const useSessionStore = defineStore('session', () => {
   async function resumeSession() {
     try {
       const result = await api.resumeSession()
-
+      
       if(!result) {
         hasSession.value = false
         return null
@@ -57,6 +57,8 @@ export const useSessionStore = defineStore('session', () => {
       hasSession.value = true
       currentQuestionIndex.value = result.questionIndex
       totalTimeMs.value = result.totalTimeMs
+      totalQuestions.value = result.totalQuestions
+            
       return result
     } catch (error) {
       hasSession.value = false

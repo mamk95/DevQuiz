@@ -50,6 +50,7 @@ export interface ResumeSessionResponse {
   totalTimeMs: number | null
   success: boolean
   message?: string
+  totalQuestions: number
 }
 
 export interface Question {
@@ -80,6 +81,15 @@ export interface AnswerResponse {
 export interface LeaderboardEntry {
   name: string
   totalMs: number
+}
+
+export interface LeaderboardPersonalScore {
+  name: string
+  totalMs: number
+  position: number
+  totalParticipants: number
+  completedAt: string
+
 }
 
 export interface SubmitEmailResponse {
@@ -225,7 +235,24 @@ class ApiClient {
     }))
   }
 
+  async getMyScore(): Promise<LeaderboardPersonalScore | null> {
+    const response = await fetch(`${this.baseUrl}/leaderboard/my-score`, {
+      method: 'GET',
+      credentials: 'include',
+    })
 
+    if (response.status === 404) {
+      return null
+    }
+
+    if (response.status === 401) {
+      return null // No valid session, treat as no score available
+    }
+
+    const data = await this.handleResponse<LeaderboardPersonalScore>(response)
+    return data
+  }
+  
   async submitEmail(email: string): Promise<SubmitEmailResponse> {
     const response = await fetch(`${this.baseUrl}/session/submit-email`, {
       method: 'POST',
