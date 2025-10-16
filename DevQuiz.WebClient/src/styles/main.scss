@@ -1,1 +1,27 @@
 @use 'tailwindcss' as *;
+
+@layer base {
+  @font-face {
+    font-family: 'Gugi';
+    src: url('../assets/fonts/gugi-v21-latin-regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  html, body {
+    font-family: 'Gugi', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .bg-primary {
+    background-color: #201d27;
+    color: #ffffff;
+  }
+
+  .bg-secondary {
+    background-color: #312c3d;
+    color: #ffffff;
+  }
+}

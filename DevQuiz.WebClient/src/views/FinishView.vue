@@ -1,18 +1,18 @@
 <template>
-  <div class="FinishView min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+  <div class="FinishView flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-secondary rounded-lg shadow-lg p-8 text-center">
       <div class="text-6xl mb-6">🎉</div>
 
-      <h1 class="text-3xl font-bold mb-4 text-gray-800">Quiz Completed!</h1>
+      <h1 class="text-3xl font-bold mb-4">Quiz Completed!</h1>
 
-      <div class="bg-blue-50 rounded-lg p-6 mb-6">
-        <p class="text-sm text-gray-600 mb-2">Your Total Time</p>
-        <p class="text-4xl font-bold text-blue-600">{{ formattedTime }}</p>
+      <div class="rounded-lg p-6 mb-6 bg-gray-100 text-gray-900">
+        <p class="text-sm mb-2">Your Total Time</p>
+        <p class="text-4xl font-bold">{{ formattedTime }}</p>
       </div>
 
-      <div class="text-gray-700 space-y-2 mb-6">
+      <div class="space-y-2 mb-8">
         <p class="text-lg">Thank you for participating!</p>
-        <p class="text-sm text-gray-600">Winners will be contacted by phone</p>
+        <p class="text-sm">Winners will be contacted by phone</p>
       </div>
 
       <ContactForm />
