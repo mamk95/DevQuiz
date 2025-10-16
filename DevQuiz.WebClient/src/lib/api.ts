@@ -223,8 +223,13 @@ class ApiClient {
     }
   }
 
-  async getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
-    const response = await fetch(`${this.baseUrl}/leaderboard/top?limit=${limit}`, {
+  async getLeaderboard(limit: number = 10, difficulty?: string): Promise<LeaderboardEntry[]> {
+    let url = `${this.baseUrl}/leaderboard/top?limit=${limit}`
+    if (difficulty) {
+      url += `&difficulty=${encodeURIComponent(difficulty)}`
+    }
+
+    const response = await fetch(url, {
       method: 'GET',
     })
 
@@ -237,8 +242,13 @@ class ApiClient {
     }))
   }
 
-  async getMyScore(): Promise<LeaderboardPersonalScore | null> {
-    const response = await fetch(`${this.baseUrl}/leaderboard/my-score`, {
+  async getMyScore(difficulty?: string): Promise<LeaderboardPersonalScore | null> {
+    let url = `${this.baseUrl}/leaderboard/my-score`
+    if (difficulty) {
+      url += `?difficulty=${encodeURIComponent(difficulty)}`
+    }
+
+    const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
     })
