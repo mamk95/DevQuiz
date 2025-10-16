@@ -15,9 +15,11 @@
         <p class="text-sm">Winners will be contacted by phone</p>
       </div>
 
+      <ContactForm />
+
       <button
         @click="goHome"
-        class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+        class="mt-6 px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
       >
         Back to Home
       </button>
@@ -29,6 +31,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import ContactForm from '@/components/ContactForm.vue'
 
 const router = useRouter()
 const sessionStore = useSessionStore()
