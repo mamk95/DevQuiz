@@ -3,7 +3,14 @@
     <!-- 1 entry -->
     <div v-if="entries.length === 1" class="flex flex-col items-center">
 
-      <img :src="entries[0].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+      <img 
+        :src="entries[0].avatarUrl || fallbackUrl" 
+        :alt="`Avatar of ${entries[0].name || 'Unknown'}`" 
+        class="w-16 h-16 rounded-full mb-4 animate-bounce object-cover" 
+        @error="handleImageError"
+        loading="lazy"
+        decoding="async"
+      />
 
       <div
         class="w-40 flex justify-center items-center text-white font-bold h-60 flex-col p-12 shadow-lg relative border-4 podium-bg"
@@ -21,7 +28,14 @@
     <template v-else-if="entries.length === 2">
       <!-- 2nd Place -->
       <div class="flex flex-col items-center">
-        <img :src="entries[1].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+        <img 
+          :src="entries[1].avatarUrl || fallbackUrl" 
+          :alt="`Avatar of ${entries[1].name || 'Unknown'}`" 
+          class="w-16 h-16 rounded-full mb-4 animate-bounce object-cover" 
+          @error="handleImageError"
+          loading="lazy"
+          decoding="async"
+        />
 
       
 
@@ -39,7 +53,14 @@
 
       <!-- 1st Place -->
       <div class="flex flex-col items-center">
-        <img :src="entries[0].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+        <img 
+          :src="entries[0].avatarUrl || fallbackUrl" 
+          :alt="`Avatar of ${entries[0].name || 'Unknown'}`" 
+          class="w-16 h-16 rounded-full mb-4 animate-bounce object-cover" 
+          @error="handleImageError"
+          loading="lazy"
+          decoding="async"
+        />
         <div
           class="w-40 flex justify-center items-center text-white font-bold h-60 flex-col p-12 shadow-lg relative border-4 podium-bg"
           style="border-color: #fdd209; border-radius: 16px"
@@ -58,7 +79,14 @@
     <template v-else-if="entries.length >= 3">
       <!-- 2nd Place -->
       <div class="flex flex-col items-center">
-        <img :src="entries[1].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+        <img 
+          :src="entries[1].avatarUrl || fallbackUrl" 
+          :alt="`Avatar of ${entries[1].name || 'Unknown'}`" 
+          class="w-16 h-16 rounded-full mb-4 animate-bounce object-cover" 
+          @error="handleImageError"
+          loading="lazy"
+          decoding="async"
+        />
 
  
         <div
@@ -77,7 +105,14 @@
 
       <!-- 1st Place -->
       <div class="flex flex-col items-center">
-        <img :src="entries[0].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+        <img 
+          :src="entries[0].avatarUrl || fallbackUrl" 
+          :alt="`Avatar of ${entries[0].name || 'Unknown'}`" 
+          class="w-16 h-16 rounded-full mb-4 animate-bounce object-cover" 
+          @error="handleImageError"
+          loading="lazy"
+          decoding="async"
+        />
 
 
         <div
@@ -96,7 +131,14 @@
 
       <!-- 3rd Place -->
       <div class="flex flex-col items-center">
-        <img :src="entries[2].avatarUrl" alt="Avatar" class="w-16 h-16 rounded-full mb-4 animate-bounce" />
+        <img 
+          :src="entries[2].avatarUrl || fallbackUrl" 
+          :alt="`Avatar of ${entries[2].name || 'Unknown'}`" 
+          class="w-16 h-16 rounded-full mb-4 animate-bounce object-cover" 
+          @error="handleImageError"
+          loading="lazy"
+          decoding="async"
+        />
 
 
         <div
@@ -118,6 +160,10 @@
 
 <script setup lang="ts">
 import type { LeaderboardEntry } from '@/lib/api'
+import { useAvatarFallback } from '@/composables/useAvatarFallback'
+
+const { fallbackUrl, handleImageError } = useAvatarFallback()
+
 defineProps<{
   entries: LeaderboardEntry[]
   formatTime: (ms: number) => string

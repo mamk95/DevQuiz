@@ -27,7 +27,14 @@
             <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
               {{ index + 4 }}
             </div>
-            <img :src="entry.avatarUrl" alt="Avatar" class="w-12 h-12 rounded-full" />
+            <img 
+              :src="entry.avatarUrl || fallbackUrl" 
+              :alt="`Avatar of ${entry.name || 'Unknown'}`" 
+              class="w-12 h-12 rounded-full object-cover"
+              @error="handleImageError"
+              loading="lazy"
+              decoding="async"
+            />
             <div class="flex-1">
               <p class="font-semibold text-lg">{{ entry.name }}</p>
             </div>
@@ -62,9 +69,11 @@ import { useLeaderboardStore } from '@/stores/leaderboard'
 import type { LeaderboardEntry } from '@/lib/api'
 import QRCode from 'qrcode'
 import LeaderboardPodium from '@/components/quiz/LeaderboardPodium.vue'
+import { useAvatarFallback } from '@/composables/useAvatarFallback'
 
 const leaderboardStore = useLeaderboardStore()
 const qrCanvas = ref<HTMLCanvasElement>()
+const { fallbackUrl, handleImageError } = useAvatarFallback()
 
 const loading = ref(true)
 const leaderboard = ref<LeaderboardEntry[]>([])
