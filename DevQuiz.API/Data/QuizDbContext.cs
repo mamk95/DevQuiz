@@ -23,6 +23,7 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
         modelBuilder.Entity<Participant>(entity =>
         {
             entity.HasIndex(e => e.Phone).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2");
         });
 
@@ -35,6 +36,11 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
                 .WithMany(p => p.Sessions)
                 .HasForeignKey(e => e.ParticipantId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Quiz)
+                .WithMany()
+                .HasForeignKey(e => e.QuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.ParticipantId, e.QuizId }).IsUnique();
         });
 
         modelBuilder.Entity<Question>(entity =>

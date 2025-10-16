@@ -1,19 +1,19 @@
 <template>
-  <div class="JoinView min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">DevQuiz</h1>
+  <div class="JoinView flex items-center justify-center p-4">
+    <div>
+      <div class="max-w-md w-full rounded-lg shadow-lg p-8 bg-secondary">
 
       <!-- Avatar selector centered above the form -->
       <div class="flex justify-center mb-6">
         <div class="flex flex-col items-center">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Avatar</label>
+          <label class="block text-sm font-medium mb-2">Avatar</label>
           <AvatarSelector v-model="selectedAvatar" :inputHeight="60" :containerWidth="300" />
         </div>
       </div>
 
       <form @submit.prevent="handleJoin" class="space-y-6">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          <label for="name" class="block text-sm font-medium mb-2">Name</label>
           <input
             id="name"
             v-model="name"
@@ -25,95 +25,95 @@
           />
         </div>
 
-        <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
-          </label>
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <div class="flex gap-2 w-full sm:w-auto">
-              <select
-                v-if="!isCustomCode"
-                :value="countryCode"
-                @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white sm:w-auto"
-              >
-                <option
-                  v-for="country in commonCountryCodes"
-                  :key="country.code"
-                  :value="country.code"
+          <div>
+            <label for="phone" class="block text-sm font-medium mb-2"> Phone Number </label>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <div class="flex gap-2 w-full sm:w-auto">
+                <select
+                  v-if="!isCustomCode"
+                  :value="countryCode"
+                  @change="handleCountryChange(($event.target as HTMLSelectElement).value)"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:w-auto"
                 >
-                  {{ country.code }} {{ country.country }}
-                </option>
-                <option value="custom">Other...</option>
-              </select>
-              <div v-else class="relative w-full sm:w-auto">
-                <input
-                  v-model="customCountryCode"
-                  @input="handleCustomCodeInput"
-                  type="text"
-                  placeholder="+XXX"
-                  maxlength="6"
-                  class="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:w-32"
-                />
-                <button
-                  type="button"
-                  @click="handleCountryChange('+47')"
-                  class="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                  title="Back to country list"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                </button>
+                  <option
+                    v-for="country in commonCountryCodes"
+                    :key="country.code"
+                    :value="country.code"
+                  >
+                    {{ country.code }} {{ country.country }}
+                  </option>
+                  <option value="custom">Other...</option>
+                </select>
+                <div v-else class="relative w-full sm:w-auto">
+                  <input
+                    v-model="customCountryCode"
+                    @input="handleCustomCodeInput"
+                    type="text"
+                    placeholder="+XXX"
+                    maxlength="6"
+                    class="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:w-32"
+                  />
+                  <button
+                    type="button"
+                    @click="handleCountryChange('+47')"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 p-1 transition-colors cursor-pointer"
+                    title="Back to country list"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
+              <input
+                id="phone"
+                v-model="phoneDigits"
+                type="tel"
+                required
+                :pattern="phonePattern"
+                :maxlength="phoneValidation.maxLength"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:flex-1"
+                :placeholder="phonePlaceholder"
+                @input="handlePhoneInput"
+              />
             </div>
-            <input
-              id="phone"
-              v-model="phoneDigits"
-              type="tel"
-              required
-              :pattern="phonePattern"
-              :maxlength="phoneValidation.maxLength"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:flex-1"
-              :placeholder="phonePlaceholder"
-              @input="handlePhoneInput"
-            />
           </div>
-        </div>
+
 
         <div class="w-full flex flex-col mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2 text-left w-full">Difficulty</label>
+          <label class="block text-sm font-medium mb-2 text-left w-full">Difficulty</label>
           <div class="flex justify-center w-full">
             <DifficultySelector v-model="difficulty" />
           </div>
         </div>
 
-        <div class="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">
-          <p class="mb-2">📝 One attempt per phone number</p>
-          <p class="mb-2">📱 Winners will be contacted by phone</p>
-          <p>🔒 Data will be deleted after the event</p>
-        </div>
+          <div class="text-sm p-3 rounded-lg border border-gray-300">
+            <p class="mb-2">📝 One attempt per phone number</p>
+            <p class="mb-2">📱 Winners will be contacted by phone</p>
+            <p>🔒 Data will be deleted after the event</p>
+          </div>
 
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {{ loading ? 'Starting...' : 'Start Quiz' }}
-        </button>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {{ loading ? 'Starting...' : 'Start Quiz' }}
+          </button>
 
-        <div
-          v-if="error"
-          class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
-        >
-          {{ error }}
-        </div>
-      </form>
+          <div
+            v-if="error"
+            class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+          >
+            {{ error }}
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -122,7 +122,6 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import DifficultySelector from '@/components/quiz/DifficultySelector.vue'
 import { useRouter } from 'vue-router'
-import type { Ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import AvatarSelector from '@/components/AvatarSelector.vue'
 // Common country codes with known validation rules
@@ -154,6 +153,20 @@ const isCustomCode = ref(false)
 const customCountryCode = ref('')
 const loading = ref(false)
 const error = ref('')
+const checkingSession = ref(true)
+
+// Try to resume existing session on mount
+onMounted(async () => {
+  try {
+    await sessionStore.resumeSession()
+    if (sessionStore.hasSession) {
+      router.push('/quiz')
+      return
+    }
+  } finally {
+    checkingSession.value = false
+  }
+})
 const difficulty = ref('noob')
 
 // Find if current code is in common list
@@ -257,3 +270,4 @@ const handleJoin = async () => {
 </script>
 
 <style scoped lang="scss"></style>
+
