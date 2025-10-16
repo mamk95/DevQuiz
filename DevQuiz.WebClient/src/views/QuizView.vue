@@ -38,6 +38,7 @@
             :disabled="submitting"
             @update:test-result="testResult = $event"
             @submit="submitCodeFix"
+            @skip="skipQuestion"
           />
         </div>
 
@@ -60,6 +61,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useQuizStore } from '@/stores/quiz'
+import { api } from '@/lib/api'
 import QuizHeader from '@/components/quiz/QuizHeader.vue'
 import QuizLoading from '@/components/quiz/QuizLoading.vue'
 import MultipleChoiceQuestion from '@/components/quiz/MultipleChoiceQuestion.vue'
@@ -194,6 +196,50 @@ const submitCodeFix = async () => {
     }
   } catch {
     // Failed to submit answer
+  } finally {
+    submitting.value = false
+  }
+}
+
+const skipQuestion = async () => {
+  if (submitting.value) return
+  submitting.value = true
+  penaltyMessage.value = ''
+
+  try {
+    const penaltyTimeMs = 60 * 1000 // 60 seconds in milliseconds
+    
+    const result = await api.skipQuestion(sessionStore.currentQuestionIndex, penaltyTimeMs)
+    
+    if (result.success) {
+      // Show penalty message
+      showPenalty(penaltyTimeMs)
+      
+      // Add penalty to total time
+      if (totalPenaltyMs.value !== undefined) {
+        totalPenaltyMs.value += penaltyTimeMs
+      } else {
+        totalPenaltyMs.value = penaltyTimeMs
+      }
+      
+      // Check if quiz is completed
+      if (sessionStore.currentQuestionIndex + 1 >= sessionStore.totalQuestions) {
+        // Quiz completed, navigate to finish
+        await router.push('/finish')
+        return
+      }
+      
+      // Move to next question
+      sessionStore.incrementQuestionIndex()
+      codeAnswer.value = ''
+      testResult.value = null
+      await loadCurrentQuestion()
+    } else {
+      throw new Error(result.message || 'Failed to skip question')
+    }
+  } catch (error) {
+    console.error('Skip question error:', error)
+    alert('Failed to skip question. Please try again.')
   } finally {
     submitting.value = false
   }

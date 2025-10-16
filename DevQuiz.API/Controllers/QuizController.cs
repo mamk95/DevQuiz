@@ -262,6 +262,106 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
         }
     }
 
+    [HttpPost("skip")]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> SkipQuestion([FromBody] SkipQuestionDto dto, CancellationToken ct)
+    {
+        var sessionId = GetSessionIdFromCookie();
+        if (sessionId == null)
+            return Unauthorized();
+
+        using var transaction = await db.Database.BeginTransactionAsync(ct);
+        try
+        {
+            var session = await db.Sessions
+                .Include(s => s.Progresses)
+                .FirstOrDefaultAsync(s => s.Id == sessionId.Value, ct);
+
+            if (session == null)
+            {
+                await transaction.RollbackAsync(ct);
+                return Unauthorized();
+            }
+
+            if (session.CompletedAtUtc != null)
+            {
+                await transaction.RollbackAsync(ct);
+                return BadRequest(new { success = false, message = "Quiz already completed" });
+            }
+
+            var quizQuestion = await db.QuizQuestions
+                .Include(qq => qq.Question)
+                .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == dto.QuestionIndex + 1)
+                .FirstOrDefaultAsync(ct);
+
+            var currentQuestion = quizQuestion?.Question;
+
+            if (currentQuestion == null)
+            {
+                await transaction.RollbackAsync(ct);
+                return BadRequest(new { success = false, message = "Question not found" });
+            }
+
+            var progress = await db.Progresses
+                .FirstOrDefaultAsync(p => p.SessionId == sessionId.Value && p.QuestionId == currentQuestion.Id, ct);
+
+            if (progress == null)
+            {
+                await transaction.RollbackAsync(ct);
+                return BadRequest(new { success = false, message = "Progress not found" });
+            }
+
+            // Mark as skipped with penalty
+            var actualDurationMs = (int)(DateTime.UtcNow - progress.StartAtUtc).TotalMilliseconds;
+            progress.IsCorrect = false;
+            progress.DurationMs = actualDurationMs; // Actual time spent on question
+            progress.PenaltyMs = dto.PenaltyTimeMs; // Add 60-second penalty
+
+            // Move to next question
+            session.CurrentQuestionIndex++;
+
+            // Check if quiz is completed
+            var nextQuestion = await db.QuizQuestions
+                .AnyAsync(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1, ct);
+
+            if (!nextQuestion)
+            {
+                // Quiz completed
+                var totalMs = 0;
+                var allProgresses = await db.Progresses
+                    .Where(p => p.SessionId == sessionId.Value)
+                    .ToListAsync(ct);
+
+                foreach (var p in allProgresses)
+                {
+                    totalMs += (p.DurationMs ?? 0) + p.PenaltyMs;
+                }
+
+                session.CompletedAtUtc = DateTime.UtcNow;
+
+                var score = new Score
+                {
+                    SessionId = sessionId.Value,
+                    TotalMs = totalMs
+                };
+
+                db.Scores.Add(score);
+            }
+
+            await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error skipping question");
+            await transaction.RollbackAsync(ct);
+            return BadRequest(new { success = false, message = "An error occurred while skipping the question" });
+        }
+    }
+
     private Guid? GetSessionIdFromCookie()
     {
         if (Request.Cookies.TryGetValue("QuizSession", out var sessionIdStr) &&

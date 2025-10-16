@@ -87,14 +87,24 @@
       </div>
     </div>
 
-    <!-- Submit Button -->
-    <button
-      @click="$emit('submit')"
-      :disabled="disabled || !modelValue.trim()"
-      class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-    >
-      {{ disabled ? 'Submitting...' : 'Submit Answer' }}
-    </button>
+    <!-- Submit and Skip Buttons -->
+    <div class="flex gap-3">
+      <button
+        @click="$emit('submit')"
+        :disabled="disabled || !modelValue.trim()"
+        class="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {{ disabled ? 'Submitting...' : 'Submit Answer' }}
+      </button>
+      
+      <button
+        @click="$emit('skip')"
+        :disabled="disabled"
+        class="py-3 px-4 bg-yellow-600 text-white rounded-lg font-medium hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        Skip (+60s)
+      </button>
+    </div>
   </div>
 </template>
 
@@ -111,6 +121,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
   'update:testResult': [value: null]
   submit: []
+  skip: []
 }>()
 
 const handleInput = (event: Event) => {
