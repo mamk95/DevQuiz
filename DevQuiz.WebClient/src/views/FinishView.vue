@@ -5,9 +5,9 @@
 
       <h1 class="text-3xl font-bold mb-4">Quiz Completed!</h1>
 
-      <div class="rounded-lg p-6 mb-6 bg-gray-100 text-gray-900">
-        <p class="text-sm mb-2">Your Total Time</p>
-        <p class="text-4xl font-bold">{{ formattedTime }}</p>
+      <div class="bg-blue-50 rounded-lg p-6 mb-6">
+        <p class="text-sm text-gray-600 mb-2">Your Current Position</p>
+        <p class="text-4xl font-bold text-blue-600">{{ leaderBoard?.position ?? 'Unknown' }}</p>
       </div>
 
       <div class="bg-blue-50 rounded-lg p-6 mb-6">
@@ -35,7 +35,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSessionStore } from '@/stores/session'
 
 const router = useRouter()
 import { api, type LeaderboardPersonalScore } from '@/lib/api'
@@ -57,3 +56,5 @@ const goHome = () => {
   router.push('/')
 }
 </script>
+
+<style scoped lang="scss"></style>
