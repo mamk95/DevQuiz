@@ -16,12 +16,12 @@
       />
 
       <!-- QR Code -->
-      <div class="w-96">
+      <div class="w-[600px]">
         <div class="bg-secondary rounded-2xl p-8 flex flex-col items-center justify-center">
           <h2 class="text-3xl font-bold mb-6">Join the Quiz!</h2>
 
           <div class="bg-white p-6 rounded-lg mb-6">
-            <canvas ref="qrCanvas" class="max-w-full"></canvas>
+            <canvas ref="qrCanvas" class="w-80 h-80"></canvas>
           </div>
 
           <div class="text-center">
@@ -77,7 +77,7 @@ const generateQRCode = async () => {
   if (qrCanvas.value) {
     try {
       await QRCode.toCanvas(qrCanvas.value, quizUrl, {
-        width: 300,
+        width: 500,
         margin: 2,
         color: {
           dark: '#1e3a8a',
