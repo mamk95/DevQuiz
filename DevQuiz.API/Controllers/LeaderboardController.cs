@@ -34,6 +34,7 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
             {
                 Name = x.participant.Name,
                 TotalMs = x.score.TotalMs,
+                AvatarUrl = x.participant.AvatarUrl ?? string.Empty,
             })
             .ToListAsync(ct);
 
