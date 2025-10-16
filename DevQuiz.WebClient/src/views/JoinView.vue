@@ -1,5 +1,5 @@
 <template>
-  <div class="JoinView flex items-center justify-center p-4">
+  <div class="flex items-center justify-center px-4">
     <div>
       <div class="max-w-md w-full rounded-lg shadow-lg p-8 bg-secondary">
 
@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DifficultySelector from '@/components/quiz/DifficultySelector.vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'

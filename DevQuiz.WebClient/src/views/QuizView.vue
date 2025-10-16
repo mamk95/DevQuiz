@@ -1,20 +1,7 @@
 <template>
-  <div class="QuizView min-h-screen p-4">
     <QuizLoading v-if="quizStore.loading" />
 
-    <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto pt-8">
-      <!-- Timer Display -->
-      <div class="bg-secondary rounded-lg shadow-md mb-4 p-4">
-        <div class="flex justify-between items-center">
-          <div class="text-sm">
-            Total Time: <span class="font-mono text-lg font-semibold text-blue-600">{{ formattedElapsedTime }}</span>
-          </div>
-          <div v-if="displayPenaltyTime" class="text-sm text-red-500 font-medium">
-            {{ displayPenaltyTime }}
-          </div>
-        </div>
-      </div>
-
+    <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto p-4 h-full flex flex-col justify-between">
       <div class="bg-secondary rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <QuizHeader
@@ -57,6 +44,8 @@
         <!-- Penalty Message -->
         <PenaltyMessage :message="penaltyMessage" />
       </div>
+
+      <ElapsedTime :session-start-time="sessionStartTime" :total-penalty-ms="totalPenaltyMs" />
     </div>
 
     <div v-else class="flex items-center justify-center min-h-screen">
@@ -64,7 +53,6 @@
         <p class="text-gray-600">No question available</p>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -77,6 +65,7 @@ import QuizLoading from '@/components/quiz/QuizLoading.vue'
 import MultipleChoiceQuestion from '@/components/quiz/MultipleChoiceQuestion.vue'
 import CodeFixQuestion from '@/components/quiz/CodeFixQuestion.vue'
 import PenaltyMessage from '@/components/quiz/PenaltyMessage.vue'
+import ElapsedTime from '@/components/quiz/ElapsedTime.vue'
 import TextFormatter from '@/components/TextFormatter.vue'
 
 const router = useRouter()
@@ -93,51 +82,25 @@ const showResult = ref(false)
 const testResult = ref<boolean | null>(null)
 
 const sessionStartTime = ref<Date | null>(null)
-const elapsedMs = ref(0)
 const totalPenaltyMs = ref(0)
 
 const currentQuestion = computed(() => quizStore.currentQuestion)
 
-const formattedElapsedTime = computed(() => {
-  const totalSeconds = Math.floor(elapsedMs.value / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-})
-
-const displayPenaltyTime = computed(() => {
-  if (totalPenaltyMs.value > 0) {
-    const penaltySeconds = Math.floor(totalPenaltyMs.value / 1000)
-    return `+${penaltySeconds}s penalty`
-  }
-  return ''
-})
-
 let penaltyTimeout: ReturnType<typeof setTimeout>
 let resultTimeout: ReturnType<typeof setTimeout>
-let timerInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   if (!sessionStore.hasSession) {
     router.push('/')
     return
   }
-  
-  timerInterval = setInterval(() => {
-    if (sessionStartTime.value) {
-      elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
-    }
-  }, 100)
-  
+
   loadCurrentQuestion()
 })
 
 onUnmounted(() => {
   clearTimeout(penaltyTimeout)
   clearTimeout(resultTimeout)
-  if (timerInterval) {
-    clearInterval(timerInterval)
-  }
 })
 
 // Initialize code editor with initial code when question loads
@@ -171,10 +134,6 @@ const submitMultipleChoice = async (answer: string) => {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
       if (result.quizCompleted) {
-        if (timerInterval) {
-          clearInterval(timerInterval)
-          timerInterval = null
-        }
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
         return
@@ -215,10 +174,6 @@ const submitCodeFix = async () => {
         totalPenaltyMs.value = result.totalPenaltyMs
       }
       if (result.quizCompleted) {
-          if (timerInterval) {
-            clearInterval(timerInterval)
-            timerInterval = null
-          }
         sessionStore.setTotalTime(result.totalMs!)
         await router.push('/finish')
         return
@@ -256,12 +211,11 @@ const showPenalty = (penaltyMs: number) => {
 const loadCurrentQuestion = async () => {
   try {
     const question = await quizStore.getCurrentQuestion()
-    
+
     if (question?.sessionStartedAtUtc && !sessionStartTime.value) {
       sessionStartTime.value = question.sessionStartedAtUtc
-      elapsedMs.value = Date.now() - sessionStartTime.value.getTime()
     }
-    
+
     if (question?.done) {
       sessionStore.setTotalTime(question.totalMs!)
       router.push('/finish')
