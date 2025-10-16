@@ -10,6 +10,11 @@
         <p class="text-4xl font-bold">{{ formattedTime }}</p>
       </div>
 
+      <div class="bg-blue-50 rounded-lg p-6 mb-6">
+        <p class="text-sm text-gray-600 mb-2">Your Total Time</p>
+        <p class="text-4xl font-bold text-blue-600">{{ formattedTime }}</p>
+      </div>
+
       <div class="space-y-2 mb-8">
         <p class="text-lg">Thank you for participating!</p>
         <p class="text-sm">Winners will be contacted by phone</p>
@@ -28,23 +33,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
-import ContactForm from '@/components/ContactForm.vue'
 
 const router = useRouter()
-const sessionStore = useSessionStore()
+import { api, type LeaderboardPersonalScore } from '@/lib/api'
+import ContactForm from '@/components/ContactForm.vue'
+
+const leaderBoard = ref<LeaderboardPersonalScore | null>(null)
+onMounted(async () => {
+  leaderBoard.value = await api.getMyScore()
+})
 
 const formattedTime = computed(() => {
-  const totalMs = sessionStore.totalTimeMs
+  const totalMs = leaderBoard.value?.totalMs
   if (!totalMs) return '0.0s'
   const seconds = totalMs / 1000
   return `${seconds.toFixed(1)}s`
 })
 
 const goHome = () => {
-  sessionStore.clearSession()
   router.push('/')
 }
 </script>

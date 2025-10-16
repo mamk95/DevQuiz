@@ -155,7 +155,6 @@ const loading = ref(false)
 const error = ref('')
 const checkingSession = ref(true)
 
-// Try to resume existing session on mount
 onMounted(async () => {
   try {
     await sessionStore.resumeSession()
