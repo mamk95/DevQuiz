@@ -312,16 +312,13 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new { success = false, message = "Progress not found" });
             }
 
-            // Mark as skipped with penalty
             var actualDurationMs = (int)(DateTime.UtcNow - progress.StartAtUtc).TotalMilliseconds;
             progress.IsCorrect = false;
-            progress.DurationMs = actualDurationMs; // Actual time spent on question
-            progress.PenaltyMs = dto.PenaltyTimeMs; // Add 60-second penalty
+            progress.DurationMs = actualDurationMs;
+            progress.PenaltyMs = dto.PenaltyTimeMs;
 
-            // Move to next question
             session.CurrentQuestionIndex++;
 
-            // Check if quiz is completed
             var nextQuestion = await db.QuizQuestions
                 .AnyAsync(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1, ct);
 

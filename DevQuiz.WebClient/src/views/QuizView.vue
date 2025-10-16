@@ -207,29 +207,24 @@ const skipQuestion = async () => {
   penaltyMessage.value = ''
 
   try {
-    const penaltyTimeMs = 60 * 1000 // 60 seconds in milliseconds
+    const penaltyTimeMs = 60 * 1000
     
     const result = await api.skipQuestion(sessionStore.currentQuestionIndex, penaltyTimeMs)
     
     if (result.success) {
-      // Show penalty message
       showPenalty(penaltyTimeMs)
       
-      // Add penalty to total time
       if (totalPenaltyMs.value !== undefined) {
         totalPenaltyMs.value += penaltyTimeMs
       } else {
         totalPenaltyMs.value = penaltyTimeMs
       }
       
-      // Check if quiz is completed
       if (sessionStore.currentQuestionIndex + 1 >= sessionStore.totalQuestions) {
-        // Quiz completed, navigate to finish
         await router.push('/finish')
         return
       }
       
-      // Move to next question
       sessionStore.incrementQuestionIndex()
       codeAnswer.value = ''
       testResult.value = null
