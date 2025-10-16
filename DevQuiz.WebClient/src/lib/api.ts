@@ -38,6 +38,17 @@ export interface StartSessionRequest {
 
 export interface StartSessionResponse {
   success: boolean
+  totalQuestions?: number
+  message?: string
+}
+
+export interface ResumeSessionResponse {
+  questionIndex: number
+  finished: boolean
+  participantName: string
+  participantPhone: string
+  totalTimeMs: number | null
+  success: boolean
   message?: string
 }
 
@@ -69,6 +80,11 @@ export interface AnswerResponse {
 export interface LeaderboardEntry {
   name: string
   totalMs: number
+}
+
+export interface SubmitEmailResponse {
+  success: boolean
+  message: string
 }
 
 class ApiClient {
@@ -113,11 +129,31 @@ class ApiClient {
       body: JSON.stringify({ name, phone, difficulty, avatarUrl }),
     })
 
-    const data = await this.handleResponse<{ success: boolean; message?: string }>(response)
+    const data = await this.handleResponse<{ success: boolean; message?: string; totalQuestions?: number }>(response)
     return {
       success: data.success ?? false,
-      message: data.message
+      message: data.message,
+      totalQuestions: data.totalQuestions
     }
+  }
+
+  async resumeSession(): Promise<ResumeSessionResponse | null> {
+    const response = await fetch(`${this.baseUrl}/session/resume`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    // 204 No Content means no session exists
+    if (response.status === 204) {
+      return null
+    }
+
+    const data = await this.handleResponse<ResumeSessionResponse>(response)
+
+    return data
   }
 
   async getCurrentQuestion(): Promise<Question> {
@@ -183,10 +219,28 @@ class ApiClient {
 
     const data = await this.handleResponse<RawLeaderboardEntry[]>(response)
 
-    return data.map(entry => ({
+    return data.map((entry) => ({
       name: entry.name ?? '',
-      totalMs: entry.totalMs ?? 0
+      totalMs: entry.totalMs ?? 0,
     }))
+  }
+
+
+  async submitEmail(email: string): Promise<SubmitEmailResponse> {
+    const response = await fetch(`${this.baseUrl}/session/submit-email`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await this.handleResponse<{ success: boolean; message: string }>(response)
+    return {
+      success: data.success ?? false,
+      message: data.message || (data.success ? 'Email submitted successfully' : 'Failed to submit email')
+    }
   }
 }
 

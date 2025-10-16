@@ -168,6 +168,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 if (wasLastQuestion)
                 {
                     var totalMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
+
                     return Ok(new AnswerResultDto
                     {
                         Correct = true,
