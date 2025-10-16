@@ -27,16 +27,60 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
 
         var normalizedPhone = NormalizePhone(dto.Phone);
 
+        var quiz = await db.Quizzes.FirstOrDefaultAsync(q => q.Difficulty == dto.Difficulty, ct);
+        if (quiz == null)
+            return BadRequest(new SessionStartedDto { Success = false, Message = "No quiz found for selected difficulty" });
+
         var existingParticipant = await db.Participants
+            .Include(p => p.Sessions)
             .FirstOrDefaultAsync(p => p.Phone == normalizedPhone, ct);
 
         if (existingParticipant != null)
         {
-            return Ok(new SessionStartedDto
+            var hasCompletedThisQuiz = existingParticipant.Sessions
+                .Any(s => s.QuizId == quiz.Id && s.CompletedAtUtc != null);
+
+            if (hasCompletedThisQuiz)
             {
-                Success = false,
-                Message = "You've already participated. Thanks!",
+                return Ok(new SessionStartedDto
+                {
+                    Success = false,
+                    Message = "You've already taken this quiz. Thanks!",
+                });
+            }
+
+            var newSession = new Session
+            {
+                Id = Guid.NewGuid(),
+                ParticipantId = existingParticipant.Id,
+                CurrentQuestionIndex = 0,
+                StartedAtUtc = DateTime.UtcNow,
+                QuizId = quiz.Id,
+            };
+
+            try
+            {
+                db.Sessions.Add(newSession);
+                await db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                return Ok(new SessionStartedDto
+                {
+                    Success = false,
+                    Message = "You've already taken this quiz. Thanks!",
+                });
+            }
+
+            Response.Cookies.Append("QuizSession", newSession.Id.ToString(), new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
             });
+
+            return Ok(new SessionStartedDto { Success = true });
         }
 
         var participant = new Participant
@@ -69,12 +113,24 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             ParticipantId = participant.Id,
             CurrentQuestionIndex = 0,
             StartedAtUtc = DateTime.UtcNow,
-            Difficulty = dto.Difficulty,
+            QuizId = quiz.Id,
         };
 
         db.Participants.Add(participant);
         db.Sessions.Add(session);
-        await db.SaveChangesAsync(ct);
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            return Ok(new SessionStartedDto
+            {
+                Success = false,
+                Message = "You've already taken this quiz. Thanks!",
+            });
+        }
 
         Response.Cookies.Append("QuizSession", session.Id.ToString(), new CookieOptions
         {
