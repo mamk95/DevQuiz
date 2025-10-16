@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/[controller]")]
 public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : ControllerBase
 {
-    private const int WrongAnswerPenaltyMs = 1000; // milliseconds
+    private const int WrongAnswerPenaltyMs = 10000; // milliseconds
 
     [HttpGet("current")]
     [ProducesResponseType(typeof(CurrentQuestionDto), 200)]
@@ -39,12 +39,16 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 Done = true,
                 TotalMs = totalMs,
+                SessionStartedAtUtc = session.StartedAtUtc,
             });
         }
 
-        var currentQuestion = await db.Questions
-            .Where(q => q.Sequence == session.CurrentQuestionIndex + 1)
+        var quizQuestion = await db.QuizQuestions
+            .Include(qq => qq.Question)
+            .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1)
             .FirstOrDefaultAsync(ct);
+
+        var currentQuestion = quizQuestion?.Question;
 
         if (currentQuestion == null)
         {
@@ -53,6 +57,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 Done = true,
                 TotalMs = totalMs,
+                SessionStartedAtUtc = session.StartedAtUtc,
             });
         }
 
@@ -80,6 +85,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             QuestionIndex = session.CurrentQuestionIndex,
             Type = currentQuestion.Type == QuestionType.MultipleChoice ? "MC" : "CodeFix",
             Prompt = currentQuestion.Prompt,
+            SessionStartedAtUtc = session.StartedAtUtc,
         };
 
         if (currentQuestion.Type == QuestionType.MultipleChoice && !string.IsNullOrEmpty(currentQuestion.ChoicesJson))
@@ -128,9 +134,12 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new AnswerResultDto { Correct = false });
             }
 
-            var currentQuestion = await db.Questions
-                .Where(q => q.Sequence == session.CurrentQuestionIndex + 1)
+            var quizQuestion = await db.QuizQuestions
+                .Include(qq => qq.Question)
+                .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1)
                 .FirstOrDefaultAsync(ct);
+
+            var currentQuestion = quizQuestion?.Question;
 
             if (currentQuestion == null)
             {
@@ -147,23 +156,29 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new AnswerResultDto { Correct = false });
             }
 
+            var totalPenaltyMs = await db.Progresses
+                .Where(p => p.SessionId == sessionId.Value)
+                .SumAsync(p => p.PenaltyMs, ct);
+
             if (progress.IsCorrect)
             {
                 await transaction.RollbackAsync(ct);
-                var wasLastQuestion = !await db.Questions.AnyAsync(q => q.Sequence == session.CurrentQuestionIndex + 2, ct);
+                var wasLastQuestion = !await db.QuizQuestions.AnyAsync(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 2, ct);
 
                 if (wasLastQuestion)
                 {
                     var totalMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
+
                     return Ok(new AnswerResultDto
                     {
                         Correct = true,
                         QuizCompleted = true,
                         TotalMs = totalMs,
+                        TotalPenaltyMs = totalPenaltyMs,
                     });
                 }
 
-                return Ok(new AnswerResultDto { Correct = true });
+                return Ok(new AnswerResultDto { Correct = true, TotalPenaltyMs = totalPenaltyMs });
             }
 
             var answerText = dto.AnswerText?.Trim() ?? "";
@@ -173,12 +188,18 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 progress.PenaltyMs += WrongAnswerPenaltyMs;
                 await db.SaveChangesAsync(ct);
+
+                var newTotalPenaltyMs = await db.Progresses
+                    .Where(p => p.SessionId == sessionId.Value)
+                    .SumAsync(p => p.PenaltyMs, ct);
+                
                 await transaction.CommitAsync(ct);
 
                 return Ok(new AnswerResultDto
                 {
                     Correct = false,
                     PenaltyMsAdded = WrongAnswerPenaltyMs,
+                    TotalPenaltyMs = newTotalPenaltyMs
                 });
             }
 
@@ -188,8 +209,8 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
 
             session.CurrentQuestionIndex++;
 
-            var nextQuestion = await db.Questions
-                .AnyAsync(q => q.Sequence == session.CurrentQuestionIndex + 1, ct);
+            var nextQuestion = await db.QuizQuestions
+                .AnyAsync(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1, ct);
 
             if (!nextQuestion)
             {
@@ -220,13 +241,18 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                     Correct = true,
                     QuizCompleted = true,
                     TotalMs = totalMs,
+                    TotalPenaltyMs = totalPenaltyMs,
                 });
             }
 
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
-            return Ok(new AnswerResultDto { Correct = true });
+            return Ok(new AnswerResultDto 
+            { 
+                Correct = true,
+                TotalPenaltyMs = totalPenaltyMs,
+            });
         }
         catch (Exception ex)
         {

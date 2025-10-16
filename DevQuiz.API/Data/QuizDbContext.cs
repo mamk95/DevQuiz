@@ -9,6 +9,8 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
     public DbSet<Session> Sessions { get; set; }
 
     public DbSet<Question> Questions { get; set; }
+    public DbSet<Quiz> Quizzes { get; set; }
+    public DbSet<QuizQuestion> QuizQuestions { get; set; }
 
     public DbSet<Progress> Progresses { get; set; }
 
@@ -21,6 +23,7 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
         modelBuilder.Entity<Participant>(entity =>
         {
             entity.HasIndex(e => e.Phone).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
             entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2");
         });
 
@@ -33,12 +36,22 @@ public class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbContext(
                 .WithMany(p => p.Sessions)
                 .HasForeignKey(e => e.ParticipantId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Quiz)
+                .WithMany()
+                .HasForeignKey(e => e.QuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.ParticipantId, e.QuizId }).IsUnique();
         });
 
         modelBuilder.Entity<Question>(entity =>
         {
-            entity.HasIndex(e => e.Sequence).IsUnique();
             entity.Property(e => e.Type).HasConversion<byte>();
+        });
+
+        modelBuilder.Entity<QuizQuestion>(entity =>
+        {
+            entity.HasIndex(e => new { e.QuizId, e.QuestionId }).IsUnique();
+            entity.Property(e => e.Sequence).IsRequired();
         });
 
         modelBuilder.Entity<Progress>(entity =>

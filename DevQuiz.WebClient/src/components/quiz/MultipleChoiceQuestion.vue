@@ -9,7 +9,7 @@
         'w-full p-4 text-left rounded-lg border-2 transition-all duration-200',
         selectedChoice === choice && !showResult
           ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 hover:border-blue-400 hover:bg-blue-50',
+          : 'border-gray-200 hover:border-blue-400 hover:bg-blue-900/30',
         disabled && 'opacity-50 cursor-not-allowed',
         showResult &&
           lastAnswer === choice &&
@@ -18,7 +18,9 @@
       ]"
     >
       <div class="flex items-center">
-        <span class="flex-1">{{ choice }}</span>
+        <div class="flex-1">
+          <TextFormatter :text="choice" />
+        </div>
         <span
           v-if="showResult && lastAnswer === choice && !wasCorrect"
           class="text-red-600 ml-2"
@@ -37,6 +39,8 @@
 </template>
 
 <script setup lang="ts">
+import TextFormatter from '@/components/TextFormatter.vue'
+
 defineProps<{
   choices?: string[]
   disabled: boolean

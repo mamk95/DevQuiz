@@ -1,9 +1,9 @@
 <template>
-  <div class="FinishView min-h-screen bg-gray-50 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+  <div class="FinishView flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-secondary rounded-lg shadow-lg p-8 text-center">
       <div class="text-6xl mb-6">🎉</div>
 
-      <h1 class="text-3xl font-bold mb-4 text-gray-800">Quiz Completed!</h1>
+      <h1 class="text-3xl font-bold mb-4">Quiz Completed!</h1>
 
       <div class="bg-blue-50 rounded-lg p-6 mb-6">
         <p class="text-sm text-gray-600 mb-2">Your Current Position</p>
@@ -15,27 +15,16 @@
         <p class="text-4xl font-bold text-blue-600">{{ formattedTime }}</p>
       </div>
 
-      <div class="bg-blue-50 rounded-lg p-6 mb-6">
-        <p class="text-md font-bold text-gray-600 mb-2">
-          Since you performed so well, we would appreciate if you applied for a position at
-          Capgemini!
-        </p>
-        <a
-          target="_blank"
-          href="https://www.capgemini.com/no-no/careers/join-capgemini/job-search/?country_code=no-no&country_name=Norway&location=Trondheim&size=15"
-          class="text-blue-600 underline"
-          >Apply here
-          </a>
-      </div>
-
       <div class="text-gray-700 space-y-2 mb-8">
         <p class="text-lg">Thank you for participating!</p>
-        <p class="text-sm text-gray-600">Winners will be contacted by phone</p>
+        <p class="text-sm">Winners will be contacted by phone</p>
       </div>
+
+      <ContactForm />
 
       <button
         @click="goHome"
-        class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+        class="mt-6 px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
       >
         Back to Home
       </button>
@@ -48,6 +37,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { api, type LeaderboardPersonalScore } from '@/lib/api'
+import ContactForm from '@/components/ContactForm.vue'
 
 const router = useRouter()
 const leaderBoard = ref<LeaderboardPersonalScore | null>(null)
@@ -58,9 +48,9 @@ onMounted(async () => {
 
 const formattedTime = computed(() => {
   const totalMs = leaderBoard.value?.totalMs
-  if (!totalMs) return '0.000s'
+  if (!totalMs) return '0.0s'
   const seconds = totalMs / 1000
-  return `${seconds.toFixed(3)}s`
+  return `${seconds.toFixed(1)}s`
 })
 
 const goHome = () => {

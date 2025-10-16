@@ -14,6 +14,7 @@ interface RawQuestion {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: string
 }
 
 interface RawAnswerResponse {
@@ -21,6 +22,7 @@ interface RawAnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 interface RawLeaderboardEntry {
@@ -31,9 +33,21 @@ interface RawLeaderboardEntry {
 export interface StartSessionRequest {
   name: string
   phone: string
+  avatarUrl: string
 }
 
 export interface StartSessionResponse {
+  success: boolean
+  totalQuestions?: number
+  message?: string
+}
+
+export interface ResumeSessionResponse {
+  questionIndex: number
+  finished: boolean
+  participantName: string
+  participantPhone: string
+  totalTimeMs: number | null
   success: boolean
   message?: string
 }
@@ -48,6 +62,7 @@ export interface Question {
   done?: boolean
   totalMs?: number
   questionIndex?: number
+  sessionStartedAtUtc?: Date
 }
 
 export interface AnswerRequest {
@@ -59,6 +74,7 @@ export interface AnswerResponse {
   penaltyMsAdded?: number
   quizCompleted?: boolean
   totalMs?: number
+  totalPenaltyMs?: number
 }
 
 export interface LeaderboardEntry {
@@ -72,6 +88,12 @@ export interface LeaderboardPersonalScore {
   position: number
   totalParticipants: number
   completedAt: string
+
+}
+
+export interface SubmitEmailResponse {
+  success: boolean
+  message: string
 }
 
 class ApiClient {
@@ -106,21 +128,41 @@ class ApiClient {
     }
   }
 
-  async startSession(name: string, phone: string): Promise<StartSessionResponse> {
+  async startSession(name: string, phone: string, difficulty: string, avatarUrl:string): Promise<StartSessionResponse> {
     const response = await fetch(`${this.baseUrl}/session/start`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name, phone, difficulty, avatarUrl }),
     })
 
-    const data = await this.handleResponse<{ success: boolean; message?: string }>(response)
+    const data = await this.handleResponse<{ success: boolean; message?: string; totalQuestions?: number }>(response)
     return {
       success: data.success ?? false,
       message: data.message,
+      totalQuestions: data.totalQuestions
     }
+  }
+
+  async resumeSession(): Promise<ResumeSessionResponse | null> {
+    const response = await fetch(`${this.baseUrl}/session/resume`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    // 204 No Content means no session exists
+    if (response.status === 204) {
+      return null
+    }
+
+    const data = await this.handleResponse<ResumeSessionResponse>(response)
+
+    return data
   }
 
   async getCurrentQuestion(): Promise<Question> {
@@ -140,6 +182,10 @@ class ApiClient {
       type = 'CodeFix'
     }
 
+    // Parse the UTC date string correctly - ensure it's treated as UTC
+    const sessionStartedAtUtc = data.sessionStartedAtUtc 
+      ? new Date(data.sessionStartedAtUtc.endsWith('Z') ? data.sessionStartedAtUtc : data.sessionStartedAtUtc + 'Z')
+      : undefined
     return {
       type,
       prompt: data.prompt,
@@ -150,6 +196,7 @@ class ApiClient {
       done: data.done,
       totalMs: data.totalMs,
       questionIndex: data.questionIndex,
+      sessionStartedAtUtc
     }
   }
 
@@ -170,6 +217,7 @@ class ApiClient {
       penaltyMsAdded: data.penaltyMsAdded,
       quizCompleted: data.quizCompleted,
       totalMs: data.totalMs,
+      totalPenaltyMs: data.totalPenaltyMs
     }
   }
 
@@ -202,6 +250,23 @@ class ApiClient {
 
     const data = await this.handleResponse<LeaderboardPersonalScore>(response)
     return data
+  }
+  
+  async submitEmail(email: string): Promise<SubmitEmailResponse> {
+    const response = await fetch(`${this.baseUrl}/session/submit-email`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await this.handleResponse<{ success: boolean; message: string }>(response)
+    return {
+      success: data.success ?? false,
+      message: data.message || (data.success ? 'Email submitted successfully' : 'Failed to submit email')
+    }
   }
 }
 

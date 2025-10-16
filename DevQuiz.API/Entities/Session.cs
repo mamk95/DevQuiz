@@ -14,11 +14,17 @@ public class Session
 
     [Required]
     public DateTime StartedAtUtc { get; set; }
+    
+    [Required]
+    public int QuizId { get; set; }
 
     public DateTime? CompletedAtUtc { get; set; }
 
     [ForeignKey(nameof(ParticipantId))]
     public Participant? Participant { get; set; }
+
+    [ForeignKey(nameof(QuizId))]
+    public Quiz? Quiz { get; set; }
 
     public ICollection<Progress> Progresses { get; set; } = [];
 

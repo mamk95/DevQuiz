@@ -14,7 +14,14 @@ public class Participant
     [StringLength(32)]
     public required string Phone { get; set; }
 
+    [Required]
+    public required string AvatarUrl { get; set; }
+
     public DateTime CreatedAtUtc { get; set; }
 
     public ICollection<Session> Sessions { get; set; } = [];
+
+    [StringLength(128)]
+    [EmailAddress]
+    public string? Email { get; set; }
 }
