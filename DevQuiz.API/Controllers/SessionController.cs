@@ -163,16 +163,18 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         {
 
             InvalidateSessionCookie();
-            return Unauthorized();
+            return NoContent();
         }
 
         if (session.CompletedAtUtc != null)
         {
             InvalidateSessionCookie();
-            return Unauthorized();
+            return NoContent();
         }
 
-        var totalQuestions = await db.Questions.CountAsync(ct);
+        var totalQuestions = await db.QuizQuestions
+            .Where(qq => qq.QuizId == session.QuizId)
+            .CountAsync(ct);
         var answeredQuestions = session.Progresses.Count(p => p.IsCorrect);
 
         var totalTimeMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
@@ -185,11 +187,13 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             ParticipantPhone = session.Participant.Phone,
             TotalTimeMs = totalTimeMs,
             Success = true,
+            TotalQuestions = totalQuestions,
         };
 
         if (answeredQuestions >= totalQuestions)
         {
             InvalidateSessionCookie();
+            return NoContent();
         }
 
         return Ok(response);
