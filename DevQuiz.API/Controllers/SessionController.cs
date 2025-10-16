@@ -35,6 +35,14 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             .Include(p => p.Sessions)
             .FirstOrDefaultAsync(p => p.Phone == normalizedPhone, ct);
 
+        var totalQuestions = await db.QuizQuestions
+            .Where(qq => qq.QuizId == quiz.Id)
+            .CountAsync(ct);
+
+        if (totalQuestions == 0)
+            return BadRequest(new SessionStartedDto { Success = false, Message = "Quiz has no questions configured" });
+            
+
         if (existingParticipant != null)
         {
             var hasCompletedThisQuiz = existingParticipant.Sessions
@@ -80,7 +88,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
             });
 
-            return Ok(new SessionStartedDto { Success = true });
+            return Ok(new SessionStartedDto { Success = true, TotalQuestions = totalQuestions });
         }
 
         var participant = new Participant
@@ -92,21 +100,6 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             CreatedAtUtc = DateTime.UtcNow,
         };
 
-        var quizId = await db.Quizzes
-            .Where(q => q.Difficulty == dto.Difficulty)
-            .Select(q => q.Id)
-            .FirstOrDefaultAsync(ct);
-            
-        if (quizId == 0)
-            return BadRequest(new SessionStartedDto { Success = false, Message = "No quiz found for selected difficulty" });
-
-        var totalQuestions = await db.QuizQuestions
-            .Where(qq => qq.QuizId == quizId)
-            .CountAsync(ct);
-            
-        if (totalQuestions == 0)
-            return BadRequest(new SessionStartedDto { Success = false, Message = "Quiz has no questions configured" });
-            
         var session = new Session
         {
             Id = Guid.NewGuid(),
