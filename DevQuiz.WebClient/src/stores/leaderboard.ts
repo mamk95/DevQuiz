@@ -23,7 +23,10 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
 
   async function fetchLeaderboardByDifficulty(difficulty: 'Noob' | 'Nerd', limit: number = 10): Promise<LeaderboardEntry[]> {
     const leaderboardData = difficulty === 'Noob' ? noobLeaderboard : nerdLeaderboard
-    leaderboardData.loading = true
+    // Only show loading state if we don't have data yet
+    if (leaderboardData.entries.length === 0) {
+      leaderboardData.loading = true
+    }
     leaderboardData.error = null
 
     try {
@@ -32,7 +35,7 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
       return data
     } catch (err) {
       leaderboardData.error = err instanceof Error ? err.message : 'Failed to load leaderboard'
-      leaderboardData.entries = []
+      // Keep existing entries on error to avoid flash of empty content
       throw err
     } finally {
       leaderboardData.loading = false
