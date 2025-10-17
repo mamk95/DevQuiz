@@ -315,7 +315,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             var actualDurationMs = (int)(DateTime.UtcNow - progress.StartAtUtc).TotalMilliseconds;
             progress.IsCorrect = false;
             progress.DurationMs = actualDurationMs;
-            progress.PenaltyMs = dto.PenaltyTimeMs;
+            progress.PenaltyMs += dto.PenaltyTimeMs;
 
             session.CurrentQuestionIndex++;
 
