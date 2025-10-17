@@ -48,6 +48,122 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
         return Ok(entries);
     }
 
+
+    [HttpGet("most-recent")]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(typeof(List<MostRecentParticipantDto>), 200)]
+    public async Task<ActionResult<List<MostRecentParticipantDto>>> GetMostRecent(CancellationToken ct, [FromQuery] int limit = 10, [FromQuery] string? difficulty = null)
+    {
+        // Should be above 1x and less than 1.5x polling interval to handle high latency
+        // With 10s frontend polling, less than 15s ensures participants appear only once in one polling cycle
+        const int IncludeCompletedParticipantsWithinTimeSlotSeconds = 11;
+
+        // Prevents counting participants who are idle for too long
+        const int IdleThresholdMinutes = 10;
+
+
+        if (limit <= 0) limit = 10;
+        if (limit > 100) limit = 100;
+
+        var quizId = await db.Quizzes
+            .Where(q => q.Difficulty == difficulty)
+            .Select(q => q.Id)
+            .FirstOrDefaultAsync(ct);
+        
+        if (quizId == 0 && !string.IsNullOrEmpty(difficulty))
+        {
+            return NotFound();
+        }
+
+        // Get recent sessions with participant info in one query
+        var recentSessions = await db.Sessions
+            .Where(s => s.QuizId == quizId)
+            .Where(s => s.StartedAtUtc >= DateTime.UtcNow.AddMinutes(-IdleThresholdMinutes))
+            .Where(s => s.CompletedAtUtc == null || s.CompletedAtUtc >= DateTime.UtcNow.AddSeconds(-IncludeCompletedParticipantsWithinTimeSlotSeconds))
+            .OrderByDescending(s => s.StartedAtUtc)
+            .Take(limit)
+            .Include(s => s.Participant)
+            .ToListAsync(ct);
+
+        var sessionIds = recentSessions.Select(s => s.Id).ToList();
+
+        // Get all penalties in one query
+        var penalties = await db.Progresses
+            .Where(p => sessionIds.Contains(p.SessionId))
+            .GroupBy(p => p.SessionId)
+            .Select(g => new { SessionId = g.Key, TotalPenalty = g.Sum(p => p.PenaltyMs) })
+            .ToDictionaryAsync(x => x.SessionId, x => x.TotalPenalty, ct);
+
+        // Get all scores for completed sessions in one query
+        var completedSessionIds = recentSessions
+            .Where(s => s.CompletedAtUtc != null)
+            .Select(s => s.Id)
+            .ToList();
+
+        var scores = await db.Scores
+            .Where(s => completedSessionIds.Contains(s.SessionId))
+            .ToDictionaryAsync(s => s.SessionId, s => s.TotalMs, ct);
+
+        // Calculate positions for all completed sessions efficiently
+        var positionsDict = new Dictionary<Guid, int>();
+        if (scores.Count > 0)
+        {
+            // Fetch all scores once and sort them
+            var allScoresForQuiz = await db.Scores
+                .Join(db.Sessions, s => s.SessionId, sess => sess.Id, (s, sess) => new { s.SessionId, s.TotalMs, sess.QuizId, sess.CompletedAtUtc })
+                .Where(x => x.CompletedAtUtc != null && x.QuizId == quizId)
+                .OrderBy(x => x.TotalMs)
+                .Select(x => new { x.SessionId, x.TotalMs })
+                .ToListAsync(ct);
+
+            // Assign positions based on sorted order
+            for (int i = 0; i < allScoresForQuiz.Count; i++)
+            {
+                var score = allScoresForQuiz[i];
+                if (scores.ContainsKey(score.SessionId))
+                {
+                    positionsDict[score.SessionId] = i + 1;
+                }
+            }
+        }
+
+        var result = recentSessions
+            .Where(s => s.Participant != null)
+            .Select(session =>
+            {
+                var totalPenalty = penalties.GetValueOrDefault(session.Id, 0);
+                
+                // For completed sessions, use the final score; for in-progress, calculate elapsed time
+                int totalMs;
+                if (session.CompletedAtUtc != null && scores.TryGetValue(session.Id, out var finalScore))
+                {
+                    totalMs = finalScore; // Use final score from Scores table
+                }
+                else
+                {
+                    totalMs = (int)(DateTime.UtcNow - session.StartedAtUtc).TotalMilliseconds + totalPenalty;
+                }
+                
+                int? position = null;
+                if (session.CompletedAtUtc != null && positionsDict.TryGetValue(session.Id, out var pos))
+                {
+                    position = pos;
+                }
+
+                return new MostRecentParticipantDto
+                {
+                    Name = session.Participant!.Name,
+                    TotalMs = totalMs,
+                    AvatarUrl = session.Participant.AvatarUrl ?? string.Empty,
+                    CompletedAt = session.CompletedAtUtc,
+                    Position = position
+                };
+            }).ToList();
+
+        return Ok(result);
+    }
+
+
     [HttpGet("my-score")]
     [ProducesResponseType(typeof(LeaderboardMyScoreDto), 200)]
     [ProducesResponseType(401)]

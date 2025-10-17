@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/lib/api'
+import type { QuizDifficulty } from '@/types/quiz'
 
 export const useSessionStore = defineStore('session', () => {
   const participantName = ref('')
@@ -13,7 +14,7 @@ export const useSessionStore = defineStore('session', () => {
 
   const isAuthenticated = computed(() => hasSession.value)
 
-  async function startSession(name: string, phoneNumber: string, difficulty: string, avatarUrl: string) {
+  async function startSession(name: string, phoneNumber: string, difficulty: QuizDifficulty, avatarUrl: string) {
     try {
       const result = await api.startSession(name, phoneNumber, difficulty, avatarUrl)
 
