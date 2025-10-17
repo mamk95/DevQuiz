@@ -1,3 +1,5 @@
+import type { QuizDifficulty } from "@/types/quiz"
+
 export interface ApiError {
   message: string
   statusCode?: number
@@ -84,6 +86,15 @@ export interface LeaderboardEntry {
   avatarUrl: string
 }
 
+
+export interface MostRecentParticipant {
+  name: string
+  totalMs: number
+  avatarUrl: string
+  completedAt: Date | null
+  position: number | null
+}
+
 export interface LeaderboardPersonalScore {
   name: string
   totalMs: number
@@ -130,7 +141,7 @@ class ApiClient {
     }
   }
 
-  async startSession(name: string, phone: string, difficulty: string, avatarUrl:string): Promise<StartSessionResponse> {
+  async startSession(name: string, phone: string, difficulty: QuizDifficulty, avatarUrl:string): Promise<StartSessionResponse> {
     const response = await fetch(`${this.baseUrl}/session/start`, {
       method: 'POST',
       credentials: 'include',
@@ -223,7 +234,7 @@ class ApiClient {
     }
   }
 
-  async getLeaderboard(limit: number = 10, difficulty?: string): Promise<LeaderboardEntry[]> {
+  async getLeaderboard(limit: number = 10, difficulty?: QuizDifficulty): Promise<LeaderboardEntry[]> {
     let url = `${this.baseUrl}/leaderboard/top?limit=${limit}`
     if (difficulty) {
       url += `&difficulty=${encodeURIComponent(difficulty)}`
@@ -240,6 +251,20 @@ class ApiClient {
       totalMs: entry.totalMs ?? 0,
       avatarUrl: entry.avatarUrl ?? ''
     }))
+  }
+
+
+  async getMostRecentParticipantsByDifficulty(limit: number = 5, difficulty: QuizDifficulty): Promise<MostRecentParticipant[]> {
+    let url = `${this.baseUrl}/leaderboard/most-recent?difficulty=${encodeURIComponent(difficulty)}&limit=${limit}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+    })
+
+    const data = await this.handleResponse<MostRecentParticipant[]>(response)
+    
+    return data;
+
   }
 
   async getMyScore(difficulty?: string): Promise<LeaderboardPersonalScore | null> {
