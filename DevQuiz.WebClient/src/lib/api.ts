@@ -246,7 +246,6 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({}),
     })
 
     const data = await this.handleResponse<RawSkipResponse>(response)

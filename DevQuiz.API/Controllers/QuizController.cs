@@ -288,7 +288,13 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             if (session.CompletedAtUtc != null)
             {
                 await transaction.RollbackAsync(ct);
-                return BadRequest(new { success = false, message = "Quiz already completed" });
+                return BadRequest(new SkipResultDto 
+                { 
+                    Success = false, 
+                    Message = "Quiz already completed",
+                    PenaltyMs = 0,
+                    QuizCompleted = false 
+                });
             }
 
             var quizQuestion = await db.QuizQuestions
@@ -301,7 +307,13 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             if (currentQuestion == null)
             {
                 await transaction.RollbackAsync(ct);
-                return BadRequest(new { success = false, message = "Question not found" });
+                return BadRequest(new SkipResultDto 
+                { 
+                    Success = false, 
+                    Message = "Question not found",
+                    PenaltyMs = 0,
+                    QuizCompleted = false 
+                });
             }
 
             var progress = await db.Progresses
@@ -310,7 +322,13 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             if (progress == null)
             {
                 await transaction.RollbackAsync(ct);
-                return BadRequest(new { success = false, message = "Progress not found" });
+                return BadRequest(new SkipResultDto 
+                { 
+                    Success = false, 
+                    Message = "Progress not found",
+                    PenaltyMs = 0,
+                    QuizCompleted = false 
+                });
             }
 
             var actualDurationMs = (int)(DateTime.UtcNow - progress.StartAtUtc).TotalMilliseconds;
