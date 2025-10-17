@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
 import { api, type LeaderboardEntry, type MostRecentParticipant } from '@/lib/api'
+import type { QuizDifficulty } from '@/types/quiz'
 
 interface LeaderboardData {
   entries: LeaderboardEntry[]
@@ -70,8 +71,8 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     error: null
   })
 
-  async function fetchMostRecentParticipants(difficulty: 'Noob' | 'Nerd', limit: number = 10): Promise<MostRecentParticipant[]> {
-    const mostRecentParticipants = difficulty === 'Noob' ? mostRecentParticipantsNoob : mostRecentParticipantsNerd
+  async function fetchMostRecentParticipants(difficulty: QuizDifficulty, limit: number = 10): Promise<MostRecentParticipant[]> {
+    const mostRecentParticipants = difficulty === 'noob' ? mostRecentParticipantsNoob : mostRecentParticipantsNerd
     mostRecentParticipants.loading = true
     mostRecentParticipants.error = null
 
@@ -89,8 +90,8 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
 
   async function fetchBothMostRecentParticipants(limit: number = 10): Promise<void> {
     await Promise.all([
-      fetchMostRecentParticipants('Noob', limit),
-      fetchMostRecentParticipants('Nerd', limit)
+      fetchMostRecentParticipants('noob', limit),
+      fetchMostRecentParticipants('nerd', limit)
     ])
   }
 

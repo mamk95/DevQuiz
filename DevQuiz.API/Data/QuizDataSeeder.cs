@@ -201,8 +201,8 @@ public static class QuizDataSeeder
         await db.SaveChangesAsync();
 
         // Create two quizzes
-        var quizNoob = new Quiz { Name = "Noob Quiz", Difficulty = "Noob" };
-        var quizNerd = new Quiz { Name = "Nerd Quiz", Difficulty = "Nerd" };
+        var quizNoob = new Quiz { Name = "Noob Quiz", Difficulty = "noob" };
+        var quizNerd = new Quiz { Name = "Nerd Quiz", Difficulty = "nerd" };
         db.Quizzes.AddRange(quizNoob, quizNerd);
         await db.SaveChangesAsync();
 
