@@ -35,11 +35,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-
-const router = useRouter()
 import { api, type LeaderboardPersonalScore } from '@/lib/api'
 import ContactForm from '@/components/ContactForm.vue'
 
+const router = useRouter()
 const leaderBoard = ref<LeaderboardPersonalScore | null>(null)
 onMounted(async () => {
   leaderBoard.value = await api.getMyScore()
