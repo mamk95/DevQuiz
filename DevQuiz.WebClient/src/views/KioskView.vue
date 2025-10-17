@@ -21,7 +21,7 @@
           <h2 class="text-3xl font-bold mb-6">Join the Quiz!</h2>
 
           <div class="bg-white p-6 rounded-lg mb-6">
-            <canvas ref="qrCanvas" class="w-80 h-80"></canvas>
+            <canvas ref="qrCanvas" class="w-[700px] h-[700px]"></canvas>
           </div>
 
           <div class="text-center">
