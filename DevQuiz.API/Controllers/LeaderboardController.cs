@@ -54,22 +54,21 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
     [ProducesResponseType(typeof(List<MostRecentParticipantDto>), 200)]
     public async Task<ActionResult<List<MostRecentParticipantDto>>> GetMostRecent(CancellationToken ct, [FromQuery] int limit = 10, [FromQuery] string? difficulty = null)
     {
-
-        // INCLUDE_COMPLETED_PARTICIPANTS_WITHIN_TIME_SLOT_SECONDS should be above 1x and less than 1.5x polling interval to handle high latency
+        // Should be above 1x and less than 1.5x polling interval to handle high latency
         // With 10s frontend polling, less than 15s ensures participants appear only once in one polling cycle
-        int INCLUDE_COMPLETED_PARTICIPANTS_WITHIN_TIME_SLOT_SECONDS = 13;
+        const int IncludeCompletedParticipantsWithinTimeSlotSeconds = 13;
 
-        // IDLE_THRESHOLD prevents counting participants who are idle for too long
-        int IDLE_THRESHOLD = 10;
+        // Prevents counting participants who are idle for too long
+        const int IdleThresholdMinutes = 10;
 
 
         if (limit <= 0) limit = 10;
         if (limit > 100) limit = 100;
 
-        var quizId = db.Quizzes
+        var quizId = await db.Quizzes
             .Where(q => q.Difficulty == difficulty)
             .Select(q => q.Id)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync(ct);
         
         if (quizId == 0 && !string.IsNullOrEmpty(difficulty))
         {
@@ -79,8 +78,8 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
         // Get recent sessions with participant info in one query
         var recentSessions = await db.Sessions
             .Where(s => s.QuizId == quizId)
-            .Where(s => s.StartedAtUtc >= DateTime.UtcNow.AddMinutes(-IDLE_THRESHOLD))
-            .Where(s => s.CompletedAtUtc == null || s.CompletedAtUtc >= DateTime.UtcNow.AddSeconds(-INCLUDE_COMPLETED_PARTICIPANTS_WITHIN_TIME_SLOT_SECONDS))
+            .Where(s => s.StartedAtUtc >= DateTime.UtcNow.AddMinutes(-IdleThresholdMinutes))
+            .Where(s => s.CompletedAtUtc == null || s.CompletedAtUtc >= DateTime.UtcNow.AddSeconds(-IncludeCompletedParticipantsWithinTimeSlotSeconds))
             .OrderByDescending(s => s.StartedAtUtc)
             .Take(limit)
             .Include(s => s.Participant)
@@ -105,20 +104,26 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
             .Where(s => completedSessionIds.Contains(s.SessionId))
             .ToDictionaryAsync(s => s.SessionId, s => s.TotalMs, ct);
 
-        // Calculate positions for all completed sessions in one query
+        // Calculate positions for all completed sessions efficiently
         var positionsDict = new Dictionary<Guid, int>();
         if (scores.Count > 0)
         {
+            // Fetch all scores once and sort them
             var allScoresForQuiz = await db.Scores
-                .Join(db.Sessions, s => s.SessionId, sess => sess.Id, (s, sess) => new { s, sess })
-                .Where(x => x.sess.CompletedAtUtc != null && x.sess.QuizId == quizId)
-                .Select(x => x.s.TotalMs)
+                .Join(db.Sessions, s => s.SessionId, sess => sess.Id, (s, sess) => new { s.SessionId, s.TotalMs, sess.QuizId, sess.CompletedAtUtc })
+                .Where(x => x.CompletedAtUtc != null && x.QuizId == quizId)
+                .OrderBy(x => x.TotalMs)
+                .Select(x => new { x.SessionId, x.TotalMs })
                 .ToListAsync(ct);
 
-            foreach (var kvp in scores)
+            // Assign positions based on sorted order
+            for (int i = 0; i < allScoresForQuiz.Count; i++)
             {
-                var position = allScoresForQuiz.Count(s => s < kvp.Value) + 1;
-                positionsDict[kvp.Key] = position;
+                var score = allScoresForQuiz[i];
+                if (scores.ContainsKey(score.SessionId))
+                {
+                    positionsDict[score.SessionId] = i + 1;
+                }
             }
         }
 
@@ -127,7 +132,17 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
             .Select(session =>
             {
                 var totalPenalty = penalties.GetValueOrDefault(session.Id, 0);
-                var totalMs = (int)(DateTime.UtcNow - session.StartedAtUtc).TotalMilliseconds + totalPenalty;
+                
+                // For completed sessions, use the final score; for in-progress, calculate elapsed time
+                int totalMs;
+                if (session.CompletedAtUtc != null && scores.TryGetValue(session.Id, out var finalScore))
+                {
+                    totalMs = finalScore; // Use final score from Scores table
+                }
+                else
+                {
+                    totalMs = (int)(DateTime.UtcNow - session.StartedAtUtc).TotalMilliseconds + totalPenalty;
+                }
                 
                 int? position = null;
                 if (session.CompletedAtUtc != null && positionsDict.TryGetValue(session.Id, out var pos))
