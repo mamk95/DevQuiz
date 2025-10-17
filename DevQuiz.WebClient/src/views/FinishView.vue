@@ -15,7 +15,7 @@
         <p class="text-4xl font-bold text-blue-600">{{ formattedTime }}</p>
       </div>
 
-      <div class="text-gray-700 space-y-2 mb-8">
+      <div class="text-white space-y-2 mb-8">
         <p class="text-lg">Thank you for participating!</p>
         <p class="text-sm">Winners will be contacted by phone</p>
       </div>

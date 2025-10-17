@@ -93,7 +93,7 @@
         </div>
 
           <div class="text-sm p-3 rounded-lg border border-gray-300">
-            <p class="mb-2">📝 One attempt per phone number</p>
+            <p class="mb-2">📝 One attempt for each difficulty</p>
             <p class="mb-2">📱 Winners will be contacted by phone</p>
             <p>🔒 Data will be deleted after the event</p>
           </div>
