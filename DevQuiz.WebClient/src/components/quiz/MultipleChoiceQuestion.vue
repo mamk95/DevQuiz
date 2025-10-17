@@ -14,7 +14,7 @@
         showResult &&
           lastAnswer === choice &&
           !wasCorrect &&
-          'border-red-500 bg-red-50 shake-animation',
+          'border-red-500 bg-red-300 shake-animation',
       ]"
     >
       <div class="flex items-center">
