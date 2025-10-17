@@ -1,7 +1,7 @@
 <template>
     <QuizLoading v-if="quizStore.loading" />
 
-    <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto p-4 min-h-screen flex flex-col">
+    <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl min-w-[350px] mx-auto p-4 min-h-screen flex flex-col">
       <div class="bg-secondary rounded-lg shadow-lg mb-4">
         <!-- Header -->
         <QuizHeader
