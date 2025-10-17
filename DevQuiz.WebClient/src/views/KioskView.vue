@@ -36,7 +36,7 @@
               <hr class="border-white/30 mt-4 mb-4" />
               <MostRecentParticipants 
                 :participants="mostRecentParticipantsNoob.entries" 
-                difficulty="Noob"
+                difficulty="noob"
                 @celebrate="handleCelebration"
               />
             </div>
@@ -45,7 +45,7 @@
               <hr class="border-white/30 mt-4 mb-4" />
               <MostRecentParticipants 
                 :participants="mostRecentParticipantsNerd.entries" 
-                difficulty="Nerd"
+                difficulty="nerd"
                 @celebrate="handleCelebration"
               />
             </div>
@@ -163,9 +163,14 @@ const generateQRCode = async () => {
   }
 }
 
-const handleCelebration = (name: string, position: number, difficulty: QuizDifficulty) => {
+const handleCelebration = (name: string, position: number, difficulty: QuizDifficulty, index: number) => {
   const id = `${name}-${position}-${difficulty}-${Date.now()}`
   activeCelebrations.value.push({ id, name, position, difficulty })
+
+  //Remove the entry for cleaner display, the polling would remove this anyways, but there would be a delay
+  const entries = difficulty === 'noob' ? mostRecentParticipantsNoob : mostRecentParticipantsNerd
+  entries.entries.splice(index, 1)
+
 }
 
 const dismissCelebration = (id: string) => {

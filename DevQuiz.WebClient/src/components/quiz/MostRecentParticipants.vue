@@ -41,7 +41,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  celebrate: [name: string, position: number, difficulty: QuizDifficulty]
+  celebrate: [name: string, position: number, difficulty: QuizDifficulty, index: number]
 }>()
 
 const { fallbackUrl, handleImageError } = useAvatarFallback()
@@ -82,7 +82,7 @@ watch(() => props.participants, (newParticipants, oldParticipants) => {
       if (!completedParticipantIds.value.has(participantId)) {
         completedParticipantIds.value.add(participantId)
 
-        emit('celebrate', participant.name, participant.position, props.difficulty)
+        emit('celebrate', participant.name, participant.position, props.difficulty, index)
       }
 
     }
