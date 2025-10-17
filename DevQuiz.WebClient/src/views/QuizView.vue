@@ -1,8 +1,8 @@
 <template>
     <QuizLoading v-if="quizStore.loading" />
 
-    <div v-else-if="currentQuestion && currentQuestion.prompt" class="min-h-screen flex flex-col px-4 sm:px-6 lg:px-8 py-6">
-      <div class="w-full max-w-4xl xl:max-w-5xl mx-auto bg-secondary rounded-lg shadow-lg mb-4">
+    <div v-else-if="currentQuestion && currentQuestion.prompt" class="max-w-3xl mx-auto p-4 h-full flex flex-col justify-between">
+      <div class="bg-secondary rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <QuizHeader
           :current-index="sessionStore.currentQuestionIndex"
