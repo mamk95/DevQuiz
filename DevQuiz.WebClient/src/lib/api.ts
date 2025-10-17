@@ -25,6 +25,14 @@ interface RawAnswerResponse {
   totalPenaltyMs?: number
 }
 
+interface RawSkipResponse {
+  success?: boolean
+  message?: string
+  penaltyMs?: number
+  quizCompleted?: boolean
+  totalMs?: number
+}
+
 interface RawLeaderboardEntry {
   name?: string
   totalMs?: number
@@ -76,6 +84,14 @@ export interface AnswerResponse {
   quizCompleted?: boolean
   totalMs?: number
   totalPenaltyMs?: number
+}
+
+export interface SkipResponse {
+  success: boolean
+  message?: string
+  penaltyMs: number
+  quizCompleted: boolean
+  totalMs?: number
 }
 
 export interface LeaderboardEntry {
@@ -220,6 +236,26 @@ class ApiClient {
       quizCompleted: data.quizCompleted,
       totalMs: data.totalMs,
       totalPenaltyMs: data.totalPenaltyMs
+    }
+  }
+
+  async skipQuestion(): Promise<SkipResponse> {
+    const response = await fetch(`${this.baseUrl}/quiz/skip`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const data = await this.handleResponse<RawSkipResponse>(response)
+
+    return {
+      success: data.success ?? false,
+      message: data.message,
+      penaltyMs: data.penaltyMs ?? 0,
+      quizCompleted: data.quizCompleted ?? false,
+      totalMs: data.totalMs
     }
   }
 

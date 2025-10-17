@@ -38,6 +38,7 @@
             :disabled="submitting"
             @update:test-result="testResult = $event"
             @submit="submitCodeFix"
+            @skip="skipQuestion"
           />
         </div>
 
@@ -60,6 +61,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { useQuizStore } from '@/stores/quiz'
+import { api } from '@/lib/api'
 import QuizHeader from '@/components/quiz/QuizHeader.vue'
 import QuizLoading from '@/components/quiz/QuizLoading.vue'
 import MultipleChoiceQuestion from '@/components/quiz/MultipleChoiceQuestion.vue'
@@ -199,9 +201,58 @@ const submitCodeFix = async () => {
   }
 }
 
+const skipQuestion = async () => {
+  if (submitting.value) return
+  submitting.value = true
+  penaltyMessage.value = ''
+
+  try {
+    const result = await api.skipQuestion()
+    
+    if (result.success) {
+      showSkipMessage(result.penaltyMs)
+      
+      if (totalPenaltyMs.value !== undefined) {
+        totalPenaltyMs.value += result.penaltyMs
+      } else {
+        totalPenaltyMs.value = result.penaltyMs
+      }
+      
+      if (result.quizCompleted) {
+        if (result.totalMs) {
+          sessionStore.setTotalTime(result.totalMs)
+        }
+        await router.push('/finish')
+        return
+      }
+      
+      sessionStore.incrementQuestionIndex()
+      codeAnswer.value = ''
+      testResult.value = null
+      await loadCurrentQuestion()
+    } else {
+      throw new Error(result.message || 'Failed to skip question')
+    }
+  } catch (error) {
+    console.error('Skip question error:', error)
+    alert('Failed to skip question. Please try again.')
+  } finally {
+    submitting.value = false
+  }
+}
+
 const showPenalty = (penaltyMs: number) => {
   const penaltySeconds = Math.floor(penaltyMs / 1000)
   penaltyMessage.value = `Incorrect! +${penaltySeconds} second${penaltySeconds === 1 ? '' : 's'} penalty`
+  clearTimeout(penaltyTimeout)
+  penaltyTimeout = setTimeout(() => {
+    penaltyMessage.value = ''
+  }, 3000)
+}
+
+const showSkipMessage = (penaltyMs: number) => {
+  const penaltySeconds = Math.floor(penaltyMs / 1000)
+  penaltyMessage.value = `Question skipped! +${penaltySeconds} second${penaltySeconds === 1 ? '' : 's'} penalty`
   clearTimeout(penaltyTimeout)
   penaltyTimeout = setTimeout(() => {
     penaltyMessage.value = ''
