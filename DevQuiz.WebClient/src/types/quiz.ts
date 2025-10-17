@@ -1,1 +1,1 @@
-export type QuizDifficulty = 'Noob' | 'Nerd'
+export type QuizDifficulty = 'noob' | 'nerd'

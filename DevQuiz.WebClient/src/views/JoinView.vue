@@ -255,7 +255,7 @@ const handleJoin = async () => {
     await sessionStore.startSession(
       name.value,
       `${countryCode.value}${phoneDigits.value}`,
-      difficulty.value,
+      difficulty.value == 'noob' ? 'noob' : 'nerd',
       selectedAvatar.value
     )
     if (sessionStore.hasSession) {
