@@ -290,9 +290,16 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 return BadRequest(new { success = false, message = "Quiz already completed" });
             }
 
+            // Validate that client question index matches server state
+            if (dto.QuestionIndex != session.CurrentQuestionIndex)
+            {
+                await transaction.RollbackAsync(ct);
+                return BadRequest(new { success = false, message = "Question index mismatch" });
+            }
+
             var quizQuestion = await db.QuizQuestions
                 .Include(qq => qq.Question)
-                .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == dto.QuestionIndex + 1)
+                .Where(qq => qq.QuizId == session.QuizId && qq.Sequence == session.CurrentQuestionIndex + 1)
                 .FirstOrDefaultAsync(ct);
 
             var currentQuestion = quizQuestion?.Question;
