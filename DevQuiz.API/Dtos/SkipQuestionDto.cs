@@ -1,7 +1,10 @@
 namespace DevQuiz.API.Dtos;
 
-public class SkipQuestionDto
+public class SkipResultDto
 {
-    public required int QuestionIndex { get; set; }
-    public required int PenaltyTimeMs { get; set; }
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public int PenaltyMs { get; set; }
+    public bool QuizCompleted { get; set; }
+    public int? TotalMs { get; set; }
 }

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : ControllerBase
 {
     private const int WrongAnswerPenaltyMs = 10000; // milliseconds
+    private const int SkipPenaltyMs = 60000; // 60 seconds
 
     [HttpGet("current")]
     [ProducesResponseType(typeof(CurrentQuestionDto), 200)]
@@ -263,9 +264,9 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
     }
 
     [HttpPost("skip")]
-    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(SkipResultDto), 200)]
     [ProducesResponseType(401)]
-    public async Task<IActionResult> SkipQuestion([FromBody] SkipQuestionDto dto, CancellationToken ct)
+    public async Task<ActionResult<SkipResultDto>> SkipQuestion(CancellationToken ct)
     {
         var sessionId = GetSessionIdFromCookie();
         if (sessionId == null)
@@ -288,13 +289,6 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             {
                 await transaction.RollbackAsync(ct);
                 return BadRequest(new { success = false, message = "Quiz already completed" });
-            }
-
-            // Validate that client question index matches server state
-            if (dto.QuestionIndex != session.CurrentQuestionIndex)
-            {
-                await transaction.RollbackAsync(ct);
-                return BadRequest(new { success = false, message = "Question index mismatch" });
             }
 
             var quizQuestion = await db.QuizQuestions
@@ -322,7 +316,7 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             var actualDurationMs = (int)(DateTime.UtcNow - progress.StartAtUtc).TotalMilliseconds;
             progress.IsCorrect = false;
             progress.DurationMs = actualDurationMs;
-            progress.PenaltyMs += dto.PenaltyTimeMs;
+            progress.PenaltyMs += SkipPenaltyMs;
 
             session.CurrentQuestionIndex++;
 
@@ -351,18 +345,40 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 };
 
                 db.Scores.Add(score);
+                
+                await db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+
+                return Ok(new SkipResultDto
+                {
+                    Success = true,
+                    PenaltyMs = SkipPenaltyMs,
+                    QuizCompleted = true,
+                    TotalMs = totalMs
+                });
             }
 
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
-            return Ok(new { success = true });
+            return Ok(new SkipResultDto
+            {
+                Success = true,
+                PenaltyMs = SkipPenaltyMs,
+                QuizCompleted = false
+            });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error skipping question");
             await transaction.RollbackAsync(ct);
-            return BadRequest(new { success = false, message = "An error occurred while skipping the question" });
+            return BadRequest(new SkipResultDto 
+            { 
+                Success = false, 
+                Message = "An error occurred while skipping the question",
+                PenaltyMs = 0,
+                QuizCompleted = false 
+            });
         }
     }
 
