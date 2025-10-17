@@ -167,7 +167,7 @@ const handleCelebration = (name: string, position: number, difficulty: QuizDiffi
   const id = `${name}-${position}-${difficulty}-${Date.now()}`
   activeCelebrations.value.push({ id, name, position, difficulty })
 
-  //Remove the entry for cleaner display, the polling would remove this anyways, but there would be a delay
+  // Remove the entry for cleaner display, the polling would remove this anyways, but there would be a delay
   const entries = difficulty === 'noob' ? mostRecentParticipantsNoob : mostRecentParticipantsNerd
   entries.entries.splice(index, 1)
 
