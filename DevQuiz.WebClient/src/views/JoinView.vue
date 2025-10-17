@@ -74,8 +74,6 @@
                 id="phone"
                 v-model="phoneDigits"
                 type="tel"
-                required
-                :pattern="phonePattern"
                 :maxlength="phoneValidation.maxLength"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none sm:flex-1"
                 :placeholder="phonePlaceholder"
@@ -187,11 +185,6 @@ const phoneValidation = computed(() => {
   }
 })
 
-const phonePattern = computed(() => {
-  const validation = phoneValidation.value
-  return `[0-9]{${validation.minLength},${validation.maxLength}}`
-})
-
 const phonePlaceholder = computed(() => {
   if (knownCountry.value) {
     return '0'.repeat(knownCountry.value.minLength)
@@ -231,6 +224,13 @@ const handlePhoneInput = (event: Event) => {
 const handleJoin = async () => {
   error.value = ''
 
+  // Validate name - must not be empty or just whitespace
+  const trimmedName = name.value.trim()
+  if (!trimmedName) {
+    error.value = 'Please enter your name'
+    return
+  }
+
   // Validate country code - must be at least "+" and one digit
   if (!countryCode.value.match(/^\+\d+$/)) {
     error.value = 'Please enter a valid country code'
@@ -253,7 +253,7 @@ const handleJoin = async () => {
 
   try {
     await sessionStore.startSession(
-      name.value,
+      trimmedName,
       `${countryCode.value}${phoneDigits.value}`,
       difficulty.value,
       selectedAvatar.value
