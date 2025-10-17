@@ -190,7 +190,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         var response = new ResumeSessionDto
         {
             QuestionIndex = session.CurrentQuestionIndex,
-            Finished = false,
+            Finished = false, // Since we checked and returned if answeredQuestions >= totalQuestions
             ParticipantName = session.Participant.Name,
             ParticipantPhone = session.Participant.Phone,
             TotalTimeMs = totalTimeMs,
