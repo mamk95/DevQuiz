@@ -1,5 +1,4 @@
 namespace DevQuiz.API.Dtos;
-
 public class MostRecentParticipantDto
 {
     public required string Name { get; set; }
