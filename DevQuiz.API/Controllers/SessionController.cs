@@ -177,8 +177,6 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             .CountAsync(ct);
         var answeredQuestions = session.Progresses.Count(p => p.IsCorrect);
 
-
-
         if (answeredQuestions >= totalQuestions)
         {
             InvalidateSessionCookie();
