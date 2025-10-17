@@ -35,6 +35,14 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             .Include(p => p.Sessions)
             .FirstOrDefaultAsync(p => p.Phone == normalizedPhone, ct);
 
+        var totalQuestions = await db.QuizQuestions
+            .Where(qq => qq.QuizId == quiz.Id)
+            .CountAsync(ct);
+
+        if (totalQuestions == 0)
+            return BadRequest(new SessionStartedDto { Success = false, Message = "Quiz has no questions configured" });
+            
+
         if (existingParticipant != null)
         {
             var hasCompletedThisQuiz = existingParticipant.Sessions
@@ -80,7 +88,7 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
             });
 
-            return Ok(new SessionStartedDto { Success = true });
+            return Ok(new SessionStartedDto { Success = true, TotalQuestions = totalQuestions });
         }
 
         var participant = new Participant
@@ -92,21 +100,6 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             CreatedAtUtc = DateTime.UtcNow,
         };
 
-        var quizId = await db.Quizzes
-            .Where(q => q.Difficulty == dto.Difficulty)
-            .Select(q => q.Id)
-            .FirstOrDefaultAsync(ct);
-            
-        if (quizId == 0)
-            return BadRequest(new SessionStartedDto { Success = false, Message = "No quiz found for selected difficulty" });
-
-        var totalQuestions = await db.QuizQuestions
-            .Where(qq => qq.QuizId == quizId)
-            .CountAsync(ct);
-            
-        if (totalQuestions == 0)
-            return BadRequest(new SessionStartedDto { Success = false, Message = "Quiz has no questions configured" });
-            
         var session = new Session
         {
             Id = Guid.NewGuid(),
@@ -163,34 +156,38 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
         {
 
             InvalidateSessionCookie();
-            return Unauthorized();
+            return NoContent();
         }
 
         if (session.CompletedAtUtc != null)
         {
             InvalidateSessionCookie();
-            return Unauthorized();
+            return NoContent();
         }
 
-        var totalQuestions = await db.Questions.CountAsync(ct);
+        var totalQuestions = await db.QuizQuestions
+            .Where(qq => qq.QuizId == session.QuizId)
+            .CountAsync(ct);
         var answeredQuestions = session.Progresses.Count(p => p.IsCorrect);
+
+        if (answeredQuestions >= totalQuestions)
+        {
+            InvalidateSessionCookie();
+            return NoContent();
+        }
 
         var totalTimeMs = session.Progresses.Sum(p => (p.DurationMs ?? 0) + p.PenaltyMs);
 
         var response = new ResumeSessionDto
         {
             QuestionIndex = session.CurrentQuestionIndex,
-            Finished = answeredQuestions >= totalQuestions,
+            Finished = false, // Since we checked and returned if answeredQuestions >= totalQuestions
             ParticipantName = session.Participant.Name,
             ParticipantPhone = session.Participant.Phone,
             TotalTimeMs = totalTimeMs,
             Success = true,
+            TotalQuestions = totalQuestions,
         };
-
-        if (answeredQuestions >= totalQuestions)
-        {
-            InvalidateSessionCookie();
-        }
 
         return Ok(response);
     }

@@ -8,4 +8,5 @@ public class ResumeSessionDto
     public string ParticipantPhone { get; set; } = string.Empty;
     public int TotalTimeMs { get; set; }
     public bool Success { get; set; }
+    public int TotalQuestions { get; set; }
 }
