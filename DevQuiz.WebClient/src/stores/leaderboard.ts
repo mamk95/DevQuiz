@@ -1,40 +1,69 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { reactive } from 'vue'
 import { api, type LeaderboardEntry } from '@/lib/api'
 
-export const useLeaderboardStore = defineStore('leaderboard', () => {
-  const entries = ref<LeaderboardEntry[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+interface LeaderboardData {
+  entries: LeaderboardEntry[]
+  loading: boolean
+  error: string | null
+}
 
-  async function fetchLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
-    loading.value = true
-    error.value = null
+export const useLeaderboardStore = defineStore('leaderboard', () => {
+  const noobLeaderboard = reactive<LeaderboardData>({
+    entries: [],
+    loading: false,
+    error: null
+  })
+
+  const nerdLeaderboard = reactive<LeaderboardData>({
+    entries: [],
+    loading: false,
+    error: null
+  })
+
+  async function fetchLeaderboardByDifficulty(difficulty: 'Noob' | 'Nerd', limit: number = 10): Promise<LeaderboardEntry[]> {
+    const leaderboardData = difficulty === 'Noob' ? noobLeaderboard : nerdLeaderboard
+    // Only show loading state if we don't have data yet
+    if (leaderboardData.entries.length === 0) {
+      leaderboardData.loading = true
+    }
+    leaderboardData.error = null
 
     try {
-      const data = await api.getLeaderboard(limit)
-      entries.value = data
+      const data = await api.getLeaderboard(limit, difficulty)
+      leaderboardData.entries = data
       return data
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load leaderboard'
-      entries.value = []
+      leaderboardData.error = err instanceof Error ? err.message : 'Failed to load leaderboard'
+      // Keep existing entries on error to avoid flash of empty content
       throw err
     } finally {
-      loading.value = false
+      leaderboardData.loading = false
     }
   }
 
-  function clearLeaderboard() {
-    entries.value = []
-    loading.value = false
-    error.value = null
+  async function fetchBothLeaderboards(limit: number = 10): Promise<void> {
+    await Promise.all([
+      fetchLeaderboardByDifficulty('Noob', limit),
+      fetchLeaderboardByDifficulty('Nerd', limit)
+    ])
+  }
+
+  function clearLeaderboards() {
+    noobLeaderboard.entries = []
+    noobLeaderboard.loading = false
+    noobLeaderboard.error = null
+
+    nerdLeaderboard.entries = []
+    nerdLeaderboard.loading = false
+    nerdLeaderboard.error = null
   }
 
   return {
-    entries,
-    loading,
-    error,
-    fetchLeaderboard,
-    clearLeaderboard
+    noobLeaderboard,
+    nerdLeaderboard,
+    fetchLeaderboardByDifficulty,
+    fetchBothLeaderboards,
+    clearLeaderboards
   }
 })

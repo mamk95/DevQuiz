@@ -1,62 +1,33 @@
 <template>
-  <div class="KioskView min-h-screen bg-primary text-white p-8">
-    <div class="max-w-7xl mx-auto h-full flex gap-8">
-      <div class="flex-1">
-        <h1 class="text-4xl font-bold mb-8 text-center">Leaderboard</h1>
+  <div class="KioskView bg-primary text-white p-8">
+    <div class="flex gap-8">
+      <LeaderboardDisplay
+        title="Noob Quiz"
+        quiz-name="noob"
+        :leaderboard="noobLeaderboard"
+        :format-time="formatTime"
+      />
 
-        <div v-if="loading" class="flex justify-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-        </div>
+      <LeaderboardDisplay
+        title="Nerd Quiz"
+        quiz-name="nerd"
+        :leaderboard="nerdLeaderboard"
+        :format-time="formatTime"
+      />
 
-        <div v-else-if="leaderboard.length === 0" class="text-center py-12 text-white/70">
-          <p class="text-xl">No completions yet</p>
-          <p class="mt-2">Be the first to complete the quiz!</p>
-        </div>
+      <!-- QR Code -->
+      <div class="w-[600px]">
+        <div class="bg-secondary rounded-2xl p-8 flex flex-col items-center justify-center">
+          <h2 class="text-3xl font-bold mb-6">Join the Quiz!</h2>
 
-        <div v-else-if="leaderboard.length < 3" class="text-center py-12 text-white/70">
-          <LeaderboardPodium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
-        </div>
-
-        <div v-else class="space-y-3">
-          <LeaderboardPodium :entries="leaderboard" :format-time="formatTime" class="mb-8" />
-          <div
-            v-for="(entry, index) in leaderboard.slice(3)"
-            :key="index"
-            class="flex items-center gap-4 p-4 rounded-xl bg-secondary"
-          >
-            <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
-              {{ index + 4 }}
-            </div>
-            <img 
-              :src="entry.avatarUrl || fallbackUrl" 
-              :alt="`Avatar of ${entry.name || 'Unknown'}`" 
-              class="w-12 h-12 rounded-full object-cover"
-              @error="handleImageError"
-              loading="lazy"
-              decoding="async"
-            />
-            <div class="flex-1">
-              <p class="font-semibold text-lg">{{ entry.name }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-2xl font-bold font-mono">{{ formatTime(entry.totalMs) }}</p>
-            </div>
+          <div class="bg-white p-6 rounded-lg mb-6">
+            <canvas ref="qrCanvas"></canvas>
           </div>
-        </div>
-      </div>
 
-      <div
-        class="w-96 bg-secondary rounded-2xl p-8 flex flex-col items-center justify-center"
-      >
-        <h2 class="text-2xl font-bold mb-6">Join the Quiz!</h2>
-
-        <div class="bg-white p-4 rounded-lg mb-6">
-          <canvas ref="qrCanvas" class="max-w-full"></canvas>
-        </div>
-
-        <div class="text-center">
-          <p class="text-lg font-mono">{{ quizUrl }}</p>
-          <p class="mt-2 text-white/70">Scan or visit to start</p>
+          <div class="text-center">
+            <p class="text-xl font-mono mb-2">{{ quizUrl }}</p>
+            <p class="text-white/70 text-lg">Scan or visit to start</p>
+          </div>
         </div>
       </div>
     </div>
@@ -66,26 +37,23 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useLeaderboardStore } from '@/stores/leaderboard'
-import type { LeaderboardEntry } from '@/lib/api'
 import QRCode from 'qrcode'
-import LeaderboardPodium from '@/components/quiz/LeaderboardPodium.vue'
-import { useAvatarFallback } from '@/composables/useAvatarFallback'
+import LeaderboardDisplay from '@/components/quiz/LeaderboardDisplay.vue'
 
 const leaderboardStore = useLeaderboardStore()
 const qrCanvas = ref<HTMLCanvasElement>()
-const { fallbackUrl, handleImageError } = useAvatarFallback()
 
-const loading = ref(true)
-const leaderboard = ref<LeaderboardEntry[]>([])
 const quizUrl = window.location.origin
-const isInitialLoad = ref(true)
+
+const noobLeaderboard = leaderboardStore.noobLeaderboard
+const nerdLeaderboard = leaderboardStore.nerdLeaderboard
 
 let pollInterval: ReturnType<typeof setInterval>
 
 onMounted(() => {
   generateQRCode()
-  loadLeaderboard()
-  pollInterval = setInterval(loadLeaderboard, 10000)
+  loadLeaderboards()
+  pollInterval = setInterval(loadLeaderboards, 10000)
 })
 
 onUnmounted(() => {
@@ -97,20 +65,11 @@ const formatTime = (ms: number) => {
   return `${seconds.toFixed(1)}s`
 }
 
-const loadLeaderboard = async () => {
-  if (isInitialLoad.value) {
-    loading.value = true
-  }
+const loadLeaderboards = async () => {
   try {
-    const newData = await leaderboardStore.fetchLeaderboard()
-    leaderboard.value = newData
+    await leaderboardStore.fetchBothLeaderboards(15)
   } catch {
-    // Failed to load leaderboard
-  } finally {
-    if (isInitialLoad.value) {
-      loading.value = false
-      isInitialLoad.value = false
-    }
+    // Silently ignore - store handles error state
   }
 }
 
@@ -118,7 +77,7 @@ const generateQRCode = async () => {
   if (qrCanvas.value) {
     try {
       await QRCode.toCanvas(qrCanvas.value, quizUrl, {
-        width: 256,
+        width: 500,
         margin: 2,
         color: {
           dark: '#1e3a8a',
@@ -126,10 +85,21 @@ const generateQRCode = async () => {
         },
       })
     } catch {
-      // Failed to generate QR code
+      // Silently ignore QR generation failure
     }
   }
 }
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.KioskView {
+  // Desktop-only optimizations
+  min-width: 1400px; // Minimum width for desktop displays
+
+  // Prevent text selection on kiosk
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+</style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-primary min-h-screen">
+  <div class="bg-primary h-dvh flex flex-col gap-4">
     <AppHeader />
     <RouterView />
   </div>
