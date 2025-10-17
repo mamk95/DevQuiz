@@ -56,7 +56,7 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
     {
         // Should be above 1x and less than 1.5x polling interval to handle high latency
         // With 10s frontend polling, less than 15s ensures participants appear only once in one polling cycle
-        const int IncludeCompletedParticipantsWithinTimeSlotSeconds = 13;
+        const int IncludeCompletedParticipantsWithinTimeSlotSeconds = 11;
 
         // Prevents counting participants who are idle for too long
         const int IdleThresholdMinutes = 10;
