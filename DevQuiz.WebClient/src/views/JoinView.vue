@@ -39,10 +39,11 @@
                     v-for="country in commonCountryCodes"
                     :key="country.code"
                     :value="country.code"
+                    class="bg-white text-gray-900 py-2"
                   >
                     {{ country.code }} {{ country.country }}
                   </option>
-                  <option value="custom">Other...</option>
+                  <option value="custom" class="bg-white text-gray-900 py-2">Other...</option>
                 </select>
                 <div v-else class="relative w-full sm:w-auto">
                   <input
