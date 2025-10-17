@@ -212,7 +212,7 @@ const skipQuestion = async () => {
     const result = await api.skipQuestion(sessionStore.currentQuestionIndex, penaltyTimeMs)
     
     if (result.success) {
-      showPenalty(penaltyTimeMs)
+      showSkipMessage(penaltyTimeMs)
       
       if (totalPenaltyMs.value !== undefined) {
         totalPenaltyMs.value += penaltyTimeMs
@@ -243,6 +243,15 @@ const skipQuestion = async () => {
 const showPenalty = (penaltyMs: number) => {
   const penaltySeconds = Math.floor(penaltyMs / 1000)
   penaltyMessage.value = `Incorrect! +${penaltySeconds} second${penaltySeconds === 1 ? '' : 's'} penalty`
+  clearTimeout(penaltyTimeout)
+  penaltyTimeout = setTimeout(() => {
+    penaltyMessage.value = ''
+  }, 3000)
+}
+
+const showSkipMessage = (penaltyMs: number) => {
+  const penaltySeconds = Math.floor(penaltyMs / 1000)
+  penaltyMessage.value = `Question skipped! +${penaltySeconds} second${penaltySeconds === 1 ? '' : 's'} penalty`
   clearTimeout(penaltyTimeout)
   penaltyTimeout = setTimeout(() => {
     penaltyMessage.value = ''
