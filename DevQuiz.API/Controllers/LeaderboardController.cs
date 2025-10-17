@@ -55,12 +55,12 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
     public async Task<ActionResult<List<MostRecentParticipantDto>>> GetMostRecent(CancellationToken ct, [FromQuery] int limit = 10, [FromQuery] string? difficulty = null)
     {
 
-        // INCLUDE_WITHIN_TIME_SLOT_SECONDS should be between 1x and 2x polling interval to handle high latency
-        // With 10s frontend polling, 15s ensures participants appear only once in on polling cycle
-        int INCLUDE_WITHIN_TIME_SLOT_SECONDS = 15;
+        // INCLUDE_COMPLETED_PARTICIPANTS_WITHIN_TIME_SLOT_SECONDS should be above 1x and less than 1.5x polling interval to handle high latency
+        // With 10s frontend polling, less than 15s ensures participants appear only once in one polling cycle
+        int INCLUDE_COMPLETED_PARTICIPANTS_WITHIN_TIME_SLOT_SECONDS = 13;
 
-        //DISREGARD_COMPLETED_WITHIN_MINUTES prevents counting participants who are idle for too long 
-        int DISREGARD_COMPLETED_WITHIN_MINUTES = 10;
+        // IDLE_THRESHOLD prevents counting participants who are idle for too long
+        int IDLE_THRESHOLD = 10;
 
 
         if (limit <= 0) limit = 10;
@@ -79,8 +79,8 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
         // Get recent sessions with participant info in one query
         var recentSessions = await db.Sessions
             .Where(s => s.QuizId == quizId)
-            .Where(s => s.StartedAtUtc >= DateTime.UtcNow.AddMinutes(-DISREGARD_COMPLETED_WITHIN_MINUTES))
-            .Where(s => s.CompletedAtUtc == null || s.CompletedAtUtc >= DateTime.UtcNow.AddSeconds(-INCLUDE_WITHIN_TIME_SLOT_SECONDS))
+            .Where(s => s.StartedAtUtc >= DateTime.UtcNow.AddMinutes(-IDLE_THRESHOLD))
+            .Where(s => s.CompletedAtUtc == null || s.CompletedAtUtc >= DateTime.UtcNow.AddSeconds(-INCLUDE_COMPLETED_PARTICIPANTS_WITHIN_TIME_SLOT_SECONDS))
             .OrderByDescending(s => s.StartedAtUtc)
             .Take(limit)
             .Include(s => s.Participant)
