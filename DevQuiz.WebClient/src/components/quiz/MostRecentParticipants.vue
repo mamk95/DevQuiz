@@ -30,9 +30,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import type { MostRecentParticipant } from '@/lib/api'
 import type { QuizDifficulty } from '@/types/quiz'
 import { useAvatarFallback } from '@/composables/useAvatarFallback'
-import { useLeaderboardStore } from '@/stores/leaderboard'
 
-const leaderboardStore = useLeaderboardStore()
 interface Props {
   participants: MostRecentParticipant[]
   difficulty: QuizDifficulty
@@ -45,8 +43,8 @@ const emit = defineEmits<{
 }>()
 
 const { fallbackUrl, handleImageError } = useAvatarFallback()
-const elapsedTimes = ref<number[]>([])
 
+const elapsedTimes = ref<number[]>([])
 const completedParticipantIds = ref<Set<string>>(new Set())
 
 let intervalId: ReturnType<typeof setInterval>
