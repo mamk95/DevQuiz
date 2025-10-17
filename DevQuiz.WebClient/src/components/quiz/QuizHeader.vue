@@ -1,7 +1,7 @@
 <template>
   <div class="text-white w-[95%] mx-auto">
     <!-- Duck progress row -->
-    <div class="flex flex-row justify-between items-center py-4">
+    <div class="flex flex-row justify-start items-center py-4 gap-0">
       <div class="flex items-center gap-2">
         <svg
           v-for="duck in totalQuestions"
@@ -21,7 +21,7 @@
         </svg>
       </div>
 
-      <span class="text-md opacity-90 whitespace-nowrap">
+      <span class="ml-4 text-md opacity-90">
           {{ currentIndex + 1 }} of {{ totalQuestions }}
         </span>
     </div>
