@@ -1,9 +1,16 @@
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
-import { api, type LeaderboardEntry } from '@/lib/api'
+import { api, type LeaderboardEntry, type MostRecentParticipant } from '@/lib/api'
 
 interface LeaderboardData {
   entries: LeaderboardEntry[]
+  loading: boolean
+  error: string | null
+}
+
+
+interface MostRecentParticipantsData {
+  entries: MostRecentParticipant[]
   loading: boolean
   error: string | null
 }
@@ -20,6 +27,8 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     loading: false,
     error: null
   })
+
+
 
   async function fetchLeaderboardByDifficulty(difficulty: 'Noob' | 'Nerd', limit: number = 10): Promise<LeaderboardEntry[]> {
     const leaderboardData = difficulty === 'Noob' ? noobLeaderboard : nerdLeaderboard
@@ -49,6 +58,42 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     ])
   }
 
+  const mostRecentParticipantsNerd = reactive<MostRecentParticipantsData>({
+    entries: [],
+    loading: false,
+    error: null
+  })
+
+  const mostRecentParticipantsNoob = reactive<MostRecentParticipantsData>({
+    entries: [],
+    loading: false,
+    error: null
+  })
+
+  async function fetchMostRecentParticipants(difficulty: 'Noob' | 'Nerd', limit: number = 10): Promise<MostRecentParticipant[]> {
+    const mostRecentParticipants = difficulty === 'Noob' ? mostRecentParticipantsNoob : mostRecentParticipantsNerd
+    mostRecentParticipants.loading = true
+    mostRecentParticipants.error = null
+
+    try {
+      const data = await api.getMostRecentParticipantsByDifficulty(limit, difficulty)
+      mostRecentParticipants.entries = data
+      return data
+    } catch (err) {
+      mostRecentParticipants.error = err instanceof Error ? err.message : 'Failed to load most recent participants'
+      throw err
+    } finally {
+      mostRecentParticipants.loading = false
+    }
+  }
+
+  async function fetchBothMostRecentParticipants(limit: number = 10): Promise<void> {
+    await Promise.all([
+      fetchMostRecentParticipants('Noob', limit),
+      fetchMostRecentParticipants('Nerd', limit)
+    ])
+  }
+
   function clearLeaderboards() {
     noobLeaderboard.entries = []
     noobLeaderboard.loading = false
@@ -64,6 +109,12 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     nerdLeaderboard,
     fetchLeaderboardByDifficulty,
     fetchBothLeaderboards,
-    clearLeaderboards
+    clearLeaderboards,
+
+    // Most recent participants
+    mostRecentParticipantsNerd,
+    mostRecentParticipantsNoob,
+    fetchBothMostRecentParticipants,
+    fetchMostRecentParticipants
   }
 })
