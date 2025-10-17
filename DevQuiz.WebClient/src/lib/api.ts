@@ -59,6 +59,7 @@ export interface ResumeSessionResponse {
   totalTimeMs: number | null
   success: boolean
   message?: string
+  totalQuestions: number
 }
 
 export interface Question {

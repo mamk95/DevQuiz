@@ -35,13 +35,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSessionStore } from '@/stores/session'
 import { api, type LeaderboardPersonalScore } from '@/lib/api'
 import ContactForm from '@/components/ContactForm.vue'
 
 const router = useRouter()
 const leaderBoard = ref<LeaderboardPersonalScore | null>(null)
-const { clearSession } = useSessionStore()
 onMounted(async () => {
   leaderBoard.value = await api.getMyScore()
 })
@@ -54,7 +52,6 @@ const formattedTime = computed(() => {
 })
 
 const goHome = () => {
-  clearSession()
   router.push('/')
 }
 </script>

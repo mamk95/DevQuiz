@@ -46,7 +46,7 @@ export const useSessionStore = defineStore('session', () => {
         hasSession.value = false
         return null
       }
-      
+
       if (result.finished === true) {
         clearSession()
         return result
@@ -57,6 +57,8 @@ export const useSessionStore = defineStore('session', () => {
       hasSession.value = true
       currentQuestionIndex.value = result.questionIndex
       totalTimeMs.value = result.totalTimeMs
+      totalQuestions.value = result.totalQuestions
+
       return result
     } catch (error) {
       hasSession.value = false
