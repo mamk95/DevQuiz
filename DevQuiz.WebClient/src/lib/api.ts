@@ -127,6 +127,25 @@ export interface SubmitEmailResponse {
   message: string
 }
 
+export interface AdminLoginRequest {
+  password: string
+}
+
+export interface AdminLoginResponse {
+  success: boolean
+  token?: string
+  message?: string
+}
+
+export interface AdminLeaderboardEntry {
+  participantId: string
+  name: string
+  phone: string
+  totalMs: number
+  avatarUrl: string
+  difficulty: string
+}
+
 class ApiClient {
   private baseUrl: string
 
@@ -343,6 +362,50 @@ class ApiClient {
       success: data.success ?? false,
       message: data.message || (data.success ? 'Email submitted successfully' : 'Failed to submit email')
     }
+  }
+
+  async adminLogin(password: string): Promise<AdminLoginResponse> {
+    const response = await fetch(`${this.baseUrl}/admin/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }),
+    })
+
+    const data = await this.handleResponse<AdminLoginResponse>(response)
+    return data
+  }
+
+  async getAdminLeaderboard(token: string, difficulty?: string, limit: number = 100): Promise<AdminLeaderboardEntry[]> {
+    const params = new URLSearchParams()
+    params.append('limit', limit.toString())
+    if (difficulty) {
+      params.append('difficulty', difficulty)
+    }
+
+    const url = `${this.baseUrl}/admin/leaderboard?${params.toString()}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    const data = await this.handleResponse<AdminLeaderboardEntry[]>(response)
+    return data
+  }
+
+  async deleteParticipant(token: string, participantId: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/admin/participant/${participantId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    await this.handleResponse<void>(response)
   }
 }
 

@@ -23,6 +23,11 @@ const router = createRouter({
       name: 'kiosk',
       component: () => import('../views/KioskView.vue'),
     },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminView.vue'),
+    },
   ],
 })
 
