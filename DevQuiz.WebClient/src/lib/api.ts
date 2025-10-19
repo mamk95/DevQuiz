@@ -144,6 +144,15 @@ export interface AdminLeaderboardEntry {
   totalMs: number
   avatarUrl: string
   difficulty: string
+  email?: string
+}
+
+export interface AdminContact {
+  participantId: string
+  name: string
+  email: string
+  phone: string
+  createdAtUtc: string
 }
 
 class ApiClient {
@@ -406,6 +415,18 @@ class ApiClient {
     })
 
     await this.handleResponse<void>(response)
+  }
+
+  async getAdminContacts(token: string): Promise<AdminContact[]> {
+    const response = await fetch(`${this.baseUrl}/admin/contacts`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    const data = await this.handleResponse<AdminContact[]>(response)
+    return data
   }
 }
 

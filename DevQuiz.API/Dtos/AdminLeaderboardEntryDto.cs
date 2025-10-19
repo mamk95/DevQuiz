@@ -8,4 +8,5 @@ public class AdminLeaderboardEntryDto
     public required int TotalMs { get; set; }
     public required string AvatarUrl { get; set; }
     public required string Difficulty { get; set; }
+    public string? Email { get; set; }
 }

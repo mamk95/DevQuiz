@@ -78,7 +78,7 @@ public class AdminController(QuizDbContext db, IConfiguration configuration) : C
 
         var query = db.Scores
             .Join(
-                db.Sessions.Include(s => s.Quiz),
+                db.Sessions,
                 score => score.SessionId,
                 session => session.Id,
                 (score, session) => new { score, session })
@@ -87,11 +87,16 @@ public class AdminController(QuizDbContext db, IConfiguration configuration) : C
                 combined => combined.session.ParticipantId,
                 participant => participant.Id,
                 (combined, participant) => new { combined.score, combined.session, participant })
+            .Join(
+                db.Quizzes,
+                combined => combined.session.QuizId,
+                quiz => quiz.Id,
+                (combined, quiz) => new { combined.score, combined.session, combined.participant, quiz })
             .Where(x => x.session.CompletedAtUtc != null);
 
         if (!string.IsNullOrEmpty(difficulty))
         {
-            query = query.Where(x => x.session.Quiz != null && x.session.Quiz.Difficulty == difficulty);
+            query = query.Where(x => x.quiz.Difficulty == difficulty);
         }
 
         var entries = await query
@@ -105,11 +110,34 @@ public class AdminController(QuizDbContext db, IConfiguration configuration) : C
                 Phone = x.participant.Phone,
                 TotalMs = x.score.TotalMs,
                 AvatarUrl = x.participant.AvatarUrl ?? string.Empty,
-                Difficulty = x.session.Quiz != null ? x.session.Quiz.Difficulty ?? "Unknown" : "Unknown"
+                Difficulty = x.quiz.Difficulty ?? "Unknown",
+                Email = x.participant.Email
             })
             .ToListAsync(ct);
 
         return Ok(entries);
+    }
+
+    [HttpGet("contacts")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<AdminContactDto>), 200)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<List<AdminContactDto>>> GetContacts(CancellationToken ct)
+    {
+        var contacts = await db.Participants
+            .Where(p => p.Email != null)
+            .OrderByDescending(p => p.CreatedAtUtc)
+            .Select(p => new AdminContactDto
+            {
+                ParticipantId = p.Id,
+                Name = p.Name,
+                Email = p.Email!,
+                Phone = p.Phone,
+                CreatedAtUtc = p.CreatedAtUtc
+            })
+            .ToListAsync(ct);
+
+        return Ok(contacts);
     }
 
     [HttpDelete("participant/{id}")]
