@@ -59,11 +59,19 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     nerdLeaderboard.error = null
   }
 
+  function updateLeaderboard(difficulty: string, entries: LeaderboardEntry[]) {
+    const leaderboardData = difficulty === 'Noob' ? noobLeaderboard : nerdLeaderboard
+    leaderboardData.entries = entries
+    leaderboardData.loading = false
+    leaderboardData.error = null
+  }
+
   return {
     noobLeaderboard,
     nerdLeaderboard,
     fetchLeaderboardByDifficulty,
     fetchBothLeaderboards,
-    clearLeaderboards
+    clearLeaderboards,
+    updateLeaderboard
   }
 })

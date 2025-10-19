@@ -15,8 +15,8 @@
         :format-time="formatTime"
       />
 
-      <!-- QR Code -->
-      <div class="w-[600px]">
+      <!-- QR Code and Active Participants -->
+      <div class="w-[600px] flex flex-col gap-6">
         <div class="bg-secondary rounded-2xl p-8 flex flex-col items-center justify-center">
           <h2 class="text-3xl font-bold mb-6">Join the Quiz!</h2>
 
@@ -29,40 +29,136 @@
             <p class="text-white/70 text-lg">Scan or visit to start</p>
           </div>
         </div>
+
+        <!-- Active Participants -->
+        <div class="bg-secondary rounded-2xl p-6">
+          <OngoingParticipants :participants="activeParticipants" />
+        </div>
       </div>
     </div>
+
+    <!-- Completion Animations -->
+    <CompletionAnimations ref="completionAnimations" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useLeaderboardStore } from '@/stores/leaderboard'
+import { useOngoingParticipantsStore } from '@/stores/ongoingParticipants'
+import { api } from '@/lib/api'
 import QRCode from 'qrcode'
+import signalrService from '@/lib/signalrService'
 import LeaderboardDisplay from '@/components/quiz/LeaderboardDisplay.vue'
+import OngoingParticipants from '@/components/quiz/OngoingParticipants.vue'
+import CompletionAnimations from '@/components/quiz/CompletionAnimations.vue'
 
 const leaderboardStore = useLeaderboardStore()
+const ongoingParticipantsStore = useOngoingParticipantsStore()
+
 const qrCanvas = ref<HTMLCanvasElement>()
+const completionAnimations = ref<InstanceType<typeof CompletionAnimations>>()
 
 const quizUrl = window.location.origin
 
 const noobLeaderboard = leaderboardStore.noobLeaderboard
 const nerdLeaderboard = leaderboardStore.nerdLeaderboard
 
-let pollInterval: ReturnType<typeof setInterval>
+const activeParticipants = computed(() => ongoingParticipantsStore.activeParticipants)
 
-onMounted(() => {
+let cleanupInterval: ReturnType<typeof setInterval>
+let pollInterval: ReturnType<typeof setInterval>
+let signalrCleanupFunctions: (() => void)[] = []
+
+onMounted(async () => {
   generateQRCode()
-  loadLeaderboards()
-  pollInterval = setInterval(loadLeaderboards, 10000)
+
+  // Initial load
+  await loadLeaderboards()
+  await loadOngoingParticipants()
+
+  // Start SignalR connection
+  await signalrService.startConnection()
+
+  // Register SignalR handlers and store cleanup functions
+  signalrCleanupFunctions.push(
+    signalrService.onLeaderboardUpdate((difficulty, entries) => {
+      console.log('[SignalR] Leaderboard update received:', difficulty, entries.length, 'entries')
+      leaderboardStore.updateLeaderboard(difficulty, entries)
+    })
+  )
+
+  signalrCleanupFunctions.push(
+    signalrService.onParticipantStarted((participant) => {
+      console.log('[SignalR] Participant started:', participant.name)
+      ongoingParticipantsStore.addParticipant(participant)
+    })
+  )
+
+  signalrCleanupFunctions.push(
+    signalrService.onParticipantProgress((participant) => {
+      console.log('[SignalR] Participant progress:', participant.name, 'Q', participant.currentQuestionIndex + 1)
+      ongoingParticipantsStore.updateParticipant(participant)
+    })
+  )
+
+  signalrCleanupFunctions.push(
+    signalrService.onParticipantCompleted((completion) => {
+      console.log('[SignalR] Participant completed:', completion.name, 'Rank', completion.ranking)
+      // Remove from ongoing participants
+      ongoingParticipantsStore.removeParticipant(completion.sessionId)
+
+      // Trigger completion animation
+      completionAnimations.value?.handleCompletion(completion)
+    })
+  )
+
+  // Cleanup inactive participants every 5 seconds
+  cleanupInterval = setInterval(() => {
+    ongoingParticipantsStore.cleanupInactive()
+  }, 5000)
+
+  // Poll for updates every 10 seconds as backup (in case SignalR disconnects or backend restarts)
+  pollInterval = setInterval(async () => {
+    await loadLeaderboards()
+    await loadOngoingParticipants()
+  }, 10000)
 })
 
-onUnmounted(() => {
+onUnmounted(async () => {
+  clearInterval(cleanupInterval)
   clearInterval(pollInterval)
+
+  // Clean up SignalR event handlers
+  signalrCleanupFunctions.forEach(cleanup => cleanup())
+  signalrCleanupFunctions = []
+
+  await signalrService.stopConnection()
 })
 
 const formatTime = (ms: number) => {
   const seconds = ms / 1000
   return `${seconds.toFixed(1)}s`
+}
+
+const loadOngoingParticipants = async () => {
+  try {
+    // Fetch ongoing participants for both difficulties
+    const [noobParticipants, nerdParticipants] = await Promise.all([
+      api.getOngoingParticipants('Noob'),
+      api.getOngoingParticipants('Nerd')
+    ])
+
+    // Replace the entire participant list with fresh data from the server
+    // This ensures completed participants are removed even if SignalR missed the event
+    ongoingParticipantsStore.clearAll()
+    const allParticipants = [...noobParticipants, ...nerdParticipants]
+    allParticipants.forEach(participant => {
+      ongoingParticipantsStore.addParticipant(participant)
+    })
+  } catch (error) {
+    console.error('Failed to load ongoing participants:', error)
+  }
 }
 
 const loadLeaderboards = async () => {

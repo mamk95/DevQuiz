@@ -48,6 +48,92 @@ public class LeaderboardController(QuizDbContext db) : ControllerBase
         return Ok(entries);
     }
 
+    [HttpGet("ongoing")]
+    [ProducesResponseType(typeof(List<OngoingParticipantDto>), 200)]
+    public async Task<ActionResult<List<OngoingParticipantDto>>> GetOngoing(CancellationToken ct, [FromQuery] string? difficulty = null)
+    {
+        var cutoffTime = DateTime.UtcNow.AddSeconds(-100); // 100 seconds ago
+
+        var query = db.Sessions
+            .Include(s => s.Participant)
+            .Include(s => s.Quiz)
+            .Where(s => s.CompletedAtUtc == null && s.StartedAtUtc >= cutoffTime);
+
+        if (!string.IsNullOrEmpty(difficulty))
+        {
+            query = query.Where(s => s.Quiz != null && s.Quiz.Difficulty == difficulty);
+        }
+
+        var sessions = await query.ToListAsync(ct);
+
+        if (sessions.Count == 0)
+            return Ok(new List<OngoingParticipantDto>());
+
+        // Pre-fetch question counts for all unique quizzes to avoid N+1 queries
+        var uniqueQuizIds = sessions
+            .Where(s => s.Quiz != null)
+            .Select(s => s.QuizId)
+            .Distinct()
+            .ToList();
+
+        var questionCounts = await db.QuizQuestions
+            .Where(qq => uniqueQuizIds.Contains(qq.QuizId))
+            .GroupBy(qq => qq.QuizId)
+            .Select(g => new { QuizId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.QuizId, x => x.Count, ct);
+
+        // Fetch last activity and penalties in a single query
+        var sessionIds = sessions.Select(s => s.Id).ToList();
+        var progressData = await db.Progresses
+            .Where(p => sessionIds.Contains(p.SessionId))
+            .GroupBy(p => p.SessionId)
+            .Select(g => new
+            {
+                SessionId = g.Key,
+                LastActivityTime = g.Max(p => p.StartAtUtc),
+                TotalPenaltyMs = g.Sum(p => p.PenaltyMs)
+            })
+            .ToDictionaryAsync(x => x.SessionId, ct);
+
+        var ongoingParticipants = new List<OngoingParticipantDto>();
+
+        foreach (var session in sessions)
+        {
+            if (session.Participant == null || session.Quiz == null)
+                continue;
+
+            // Get progress data from pre-fetched dictionary
+            var lastActivityTime = session.StartedAtUtc;
+            var totalPenaltyMs = 0;
+
+            if (progressData.TryGetValue(session.Id, out var data))
+            {
+                lastActivityTime = data.LastActivityTime;
+                totalPenaltyMs = data.TotalPenaltyMs;
+            }
+
+            if (DateTime.UtcNow - lastActivityTime > TimeSpan.FromSeconds(100))
+                continue;
+
+            var totalQuestions = questionCounts.GetValueOrDefault(session.QuizId, 0);
+
+            ongoingParticipants.Add(new OngoingParticipantDto
+            {
+                SessionId = session.Id.ToString(),
+                Name = session.Participant.Name,
+                AvatarUrl = session.Participant.AvatarUrl ?? string.Empty,
+                Difficulty = session.Quiz.Difficulty ?? "Unknown",
+                StartedAtMs = new DateTimeOffset(session.StartedAtUtc, TimeSpan.Zero).ToUnixTimeMilliseconds(),
+                LastActivityMs = new DateTimeOffset(lastActivityTime, TimeSpan.Zero).ToUnixTimeMilliseconds(),
+                CurrentQuestionIndex = session.CurrentQuestionIndex,
+                TotalQuestions = totalQuestions,
+                TotalPenaltyMs = totalPenaltyMs,
+            });
+        }
+
+        return Ok(ongoingParticipants);
+    }
+
     [HttpGet("my-score")]
     [ProducesResponseType(typeof(LeaderboardMyScoreDto), 200)]
     [ProducesResponseType(401)]

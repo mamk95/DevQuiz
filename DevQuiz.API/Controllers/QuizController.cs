@@ -3,12 +3,17 @@ using System.Text.Json;
 using DevQuiz.API.Data;
 using DevQuiz.API.Dtos;
 using DevQuiz.API.Entities;
+using DevQuiz.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/[controller]")]
-public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : ControllerBase
+public class QuizController(
+    QuizDbContext db,
+    ILogger<QuizController> logger,
+    IQuizHubService quizHubService,
+    IServiceScopeFactory serviceScopeFactory) : ControllerBase
 {
     private const int WrongAnswerPenaltyMs = 10000; // milliseconds
     private const int SkipPenaltyMs = 60000; // 60 seconds
@@ -193,8 +198,11 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 var newTotalPenaltyMs = await db.Progresses
                     .Where(p => p.SessionId == sessionId.Value)
                     .SumAsync(p => p.PenaltyMs, ct);
-                
+
                 await transaction.CommitAsync(ct);
+
+                // Send progress update to show penalty immediately (don't await to avoid blocking response)
+                _ = Task.Run(() => SendProgressUpdateAsync(sessionId.Value, CancellationToken.None));
 
                 return Ok(new AnswerResultDto
                 {
@@ -237,6 +245,9 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
 
+                // Send completion notification (don't await to avoid blocking response)
+                _ = Task.Run(() => SendCompletionNotificationAsync(sessionId.Value, totalMs, CancellationToken.None));
+
                 return Ok(new AnswerResultDto
                 {
                     Correct = true,
@@ -249,8 +260,11 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
-            return Ok(new AnswerResultDto 
-            { 
+            // Send progress update (don't await to avoid blocking response)
+            _ = Task.Run(() => SendProgressUpdateAsync(sessionId.Value, CancellationToken.None));
+
+            return Ok(new AnswerResultDto
+            {
                 Correct = true,
                 TotalPenaltyMs = totalPenaltyMs,
             });
@@ -363,9 +377,12 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
                 };
 
                 db.Scores.Add(score);
-                
+
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
+
+                // Send completion notification (don't await to avoid blocking response)
+                _ = Task.Run(() => SendCompletionNotificationAsync(sessionId.Value, totalMs, CancellationToken.None));
 
                 return Ok(new SkipResultDto
                 {
@@ -378,6 +395,9 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
 
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
+
+            // Send progress update (don't await to avoid blocking response)
+            _ = Task.Run(() => SendProgressUpdateAsync(sessionId.Value, CancellationToken.None));
 
             return Ok(new SkipResultDto
             {
@@ -422,5 +442,124 @@ public class QuizController(QuizDbContext db, ILogger<QuizController> logger) : 
         }
 
         return shuffled;
+    }
+
+    private async Task SendProgressUpdateAsync(Guid sessionId, CancellationToken ct)
+    {
+        try
+        {
+            using var scope = serviceScopeFactory.CreateScope();
+            var scopedDb = scope.ServiceProvider.GetRequiredService<QuizDbContext>();
+
+            var session = await scopedDb.Sessions
+                .Include(s => s.Participant)
+                .Include(s => s.Quiz)
+                .Include(s => s.Progresses)
+                .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+
+            if (session?.Participant == null || session.Quiz == null)
+            {
+                logger.LogWarning("Session {SessionId} not found or missing participant/quiz for progress update", sessionId);
+                return;
+            }
+
+            var totalQuestions = await scopedDb.QuizQuestions
+                .Where(qq => qq.QuizId == session.QuizId)
+                .CountAsync(ct);
+
+            var totalPenaltyMs = session.Progresses.Sum(p => p.PenaltyMs);
+
+            var ongoingParticipant = new OngoingParticipantDto
+            {
+                SessionId = session.Id.ToString(),
+                Name = session.Participant.Name,
+                AvatarUrl = session.Participant.AvatarUrl ?? string.Empty,
+                Difficulty = session.Quiz.Difficulty ?? "Unknown",
+                StartedAtMs = new DateTimeOffset(session.StartedAtUtc, TimeSpan.Zero).ToUnixTimeMilliseconds(),
+                LastActivityMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                CurrentQuestionIndex = session.CurrentQuestionIndex,
+                TotalQuestions = totalQuestions,
+                TotalPenaltyMs = totalPenaltyMs,
+            };
+
+            await quizHubService.SendParticipantProgressAsync(ongoingParticipant);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending progress update for session {SessionId}", sessionId);
+        }
+    }
+
+    private async Task SendCompletionNotificationAsync(Guid sessionId, int totalMs, CancellationToken ct)
+    {
+        try
+        {
+            using var scope = serviceScopeFactory.CreateScope();
+            var scopedDb = scope.ServiceProvider.GetRequiredService<QuizDbContext>();
+
+            var session = await scopedDb.Sessions
+                .Include(s => s.Participant)
+                .Include(s => s.Quiz)
+                .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+
+            if (session?.Participant == null || session.Quiz == null)
+            {
+                logger.LogWarning("Session {SessionId} not found or missing participant/quiz", sessionId);
+                return;
+            }
+
+            if (session.CompletedAtUtc == null)
+            {
+                logger.LogWarning("Session {SessionId} for {Name} has no completion time", sessionId, session.Participant.Name);
+                return;
+            }
+
+            // Calculate ranking (must account for tie-breaking by CompletedAtUtc)
+            var ranking = await scopedDb.Scores
+                .Join(scopedDb.Sessions, score => score.SessionId, s => s.Id, (score, s) => new { score, s })
+                .Where(x => x.s.QuizId == session.QuizId &&
+                           (x.score.TotalMs < totalMs ||
+                            (x.score.TotalMs == totalMs && x.s.CompletedAtUtc < session.CompletedAtUtc)))
+                .CountAsync(ct) + 1;
+
+            var isTopThree = ranking <= 3;
+            var isOnLeaderboard = ranking <= 10;
+
+            var completion = new ParticipantCompletionDto
+            {
+                SessionId = session.Id.ToString(),
+                Name = session.Participant.Name,
+                AvatarUrl = session.Participant.AvatarUrl ?? string.Empty,
+                Difficulty = session.Quiz.Difficulty ?? "Unknown",
+                TotalMs = totalMs,
+                Ranking = ranking,
+                IsTopThree = isTopThree,
+                IsOnLeaderboard = isOnLeaderboard,
+            };
+
+            await quizHubService.SendParticipantCompletedAsync(completion);
+
+            // Also send updated leaderboard
+            var leaderboard = await scopedDb.Scores
+                .Join(scopedDb.Sessions, score => score.SessionId, s => s.Id, (score, s) => new { score, s })
+                .Join(scopedDb.Participants, x => x.s.ParticipantId, p => p.Id, (x, p) => new { x.score, x.s, p })
+                .Where(x => x.s.QuizId == session.QuizId && x.s.CompletedAtUtc != null)
+                .OrderBy(x => x.score.TotalMs)
+                .ThenBy(x => x.s.CompletedAtUtc)
+                .Take(10)
+                .Select(x => new LeaderboardEntryDto
+                {
+                    Name = x.p.Name,
+                    TotalMs = x.score.TotalMs,
+                    AvatarUrl = x.p.AvatarUrl ?? string.Empty,
+                })
+                .ToListAsync(ct);
+
+            await quizHubService.SendLeaderboardUpdateAsync(session.Quiz.Difficulty ?? "Unknown", leaderboard);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending completion notification for session {SessionId}", sessionId);
+        }
     }
 }

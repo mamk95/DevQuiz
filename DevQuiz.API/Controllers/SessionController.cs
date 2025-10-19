@@ -3,12 +3,13 @@ using System.Text.RegularExpressions;
 using DevQuiz.API.Data;
 using DevQuiz.API.Dtos;
 using DevQuiz.API.Entities;
+using DevQuiz.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/[controller]")]
-public partial class SessionController(QuizDbContext db) : ControllerBase
+public partial class SessionController(QuizDbContext db, IQuizHubService quizHubService) : ControllerBase
 {
     private const int CookieTtlDays = 2;
 
@@ -88,6 +89,23 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
                 Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
             });
 
+            // Send real-time update
+            var ongoingParticipant = new OngoingParticipantDto
+            {
+                SessionId = newSession.Id.ToString(),
+                Name = existingParticipant.Name,
+                AvatarUrl = existingParticipant.AvatarUrl ?? string.Empty,
+                Difficulty = quiz.Difficulty ?? "Unknown",
+                StartedAtMs = new DateTimeOffset(newSession.StartedAtUtc, TimeSpan.Zero).ToUnixTimeMilliseconds(),
+                LastActivityMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                CurrentQuestionIndex = 0,
+                TotalQuestions = totalQuestions,
+                TotalPenaltyMs = 0,
+            };
+
+            // Send real-time update (don't await to avoid blocking response)
+            _ = Task.Run(() => quizHubService.SendParticipantStartedAsync(ongoingParticipant));
+
             return Ok(new SessionStartedDto { Success = true, TotalQuestions = totalQuestions });
         }
 
@@ -132,6 +150,23 @@ public partial class SessionController(QuizDbContext db) : ControllerBase
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(CookieTtlDays),
         });
+
+        // Send real-time update
+        var newParticipantDto = new OngoingParticipantDto
+        {
+            SessionId = session.Id.ToString(),
+            Name = participant.Name,
+            AvatarUrl = participant.AvatarUrl ?? string.Empty,
+            Difficulty = quiz.Difficulty ?? "Unknown",
+            StartedAtMs = new DateTimeOffset(session.StartedAtUtc, TimeSpan.Zero).ToUnixTimeMilliseconds(),
+            LastActivityMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            CurrentQuestionIndex = 0,
+            TotalQuestions = totalQuestions,
+            TotalPenaltyMs = 0,
+        };
+
+        // Send real-time update (don't await to avoid blocking response)
+        _ = Task.Run(() => quizHubService.SendParticipantStartedAsync(newParticipantDto));
 
         return Ok(new SessionStartedDto { Success = true, TotalQuestions = totalQuestions });
     }

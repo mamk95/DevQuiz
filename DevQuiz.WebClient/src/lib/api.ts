@@ -110,6 +110,18 @@ export interface LeaderboardPersonalScore {
 
 }
 
+export interface OngoingParticipant {
+  sessionId: string
+  name: string
+  avatarUrl: string
+  difficulty: string
+  startedAtMs: number
+  lastActivityMs: number
+  currentQuestionIndex: number
+  totalQuestions: number
+  totalPenaltyMs: number
+}
+
 export interface SubmitEmailResponse {
   success: boolean
   message: string
@@ -299,6 +311,20 @@ class ApiClient {
     }
 
     const data = await this.handleResponse<LeaderboardPersonalScore>(response)
+    return data
+  }
+
+  async getOngoingParticipants(difficulty?: string): Promise<OngoingParticipant[]> {
+    let url = `${this.baseUrl}/leaderboard/ongoing`
+    if (difficulty) {
+      url += `?difficulty=${encodeURIComponent(difficulty)}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+    })
+
+    const data = await this.handleResponse<OngoingParticipant[]>(response)
     return data
   }
   

@@ -1,9 +1,13 @@
 using DevQuiz.API.Data;
+using DevQuiz.API.Hubs;
+using DevQuiz.API.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IQuizHubService, QuizHubService>();
 
 builder.Services.AddDbContext<QuizDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -59,6 +63,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
+app.MapHub<QuizHub>("/quizhub");
 app.MapFallbackToFile("index.html");
 
 app.Run();
